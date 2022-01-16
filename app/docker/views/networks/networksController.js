@@ -61,7 +61,7 @@ angular.module('portainer.docker').controller('NetworksController', [
       };
 
       if ($scope.applicationState.endpoint.mode.agentProxy && $scope.applicationState.endpoint.mode.provider === 'DOCKER_SWARM_MODE') {
-        req.agents = AgentService.agents();
+        req.agents = AgentService.agents(endpoint.Id);
       }
 
       $q.all(req)
