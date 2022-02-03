@@ -20,12 +20,6 @@ angular.module('portainer.app').factory('LocalStorage', [
       getLoginStateUUID: function () {
         return localStorageService.get('LOGIN_STATE_UUID');
       },
-      storeOfflineMode: function (isOffline) {
-        localStorageService.set('ENDPOINT_OFFLINE_MODE', isOffline);
-      },
-      getOfflineMode: function () {
-        return localStorageService.get('ENDPOINT_OFFLINE_MODE');
-      },
       storeEndpoints: function (data) {
         localStorageService.set('ENDPOINTS_DATA', data);
       },
@@ -136,7 +130,7 @@ angular.module('portainer.app').factory('LocalStorage', [
         localStorageService.remove('JWT', 'APPLICATION_STATE', 'LOGIN_STATE_UUID');
       },
       cleanEndpointData() {
-        localStorageService.remove('ENDPOINT_ID', 'ENDPOINT_PUBLIC_URL', 'ENDPOINT_OFFLINE_MODE', 'ENDPOINTS_DATA', 'ENDPOINT_STATE');
+        localStorageService.remove('ENDPOINT_ID', 'ENDPOINT_PUBLIC_URL', 'ENDPOINTS_DATA', 'ENDPOINT_STATE');
       },
       storeKubernetesSummaryToggle(value) {
         localStorageService.set('kubernetes_summary_expanded', value);
