@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from '@uirouter/react';
 
 import { Widget, WidgetBody } from '@/portainer/components/widget';
@@ -9,30 +9,19 @@ import { TextTip } from '@/portainer/components/Tip/TextTip';
 import { Code } from '@/portainer/components/Code';
 import { CopyButton } from '@/portainer/components/Button/CopyButton';
 import { Input } from '@/portainer/components/form-components/Input';
+import { useUser } from '@/portainer/hooks/useUser';
+
+import { useCreateAccessTokenMutation } from '../queries';
 
 import styles from './CreateAccessToken.module.css';
 
-interface AccessTokenResponse {
-  rawAPIKey: string;
-}
-
-export interface Props {
-  // onSubmit dispatches a successful matomo analytics event
-  onSubmit: (description: string) => Promise<AccessTokenResponse>;
-
-  // onError is called when an error occurs; this is a callback to Notifications.error
-  onError: (heading: string, err: unknown, message: string) => void;
-}
-
-export function CreateAccessToken({
-  onSubmit,
-  onError,
-}: PropsWithChildren<Props>) {
+export function CreateAccessToken() {
   const router = useRouter();
   const [description, setDescription] = useState('');
   const [errorText, setErrorText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [accessToken, setAccessToken] = useState('');
+
+  const { user } = useUser();
 
   useEffect(() => {
     if (description.length === 0) {
@@ -40,21 +29,22 @@ export function CreateAccessToken({
     } else setErrorText('');
   }, [description]);
 
-  async function generateAccessToken() {
-    if (isLoading) {
-      return;
+  const mutation = useCreateAccessTokenMutation();
+
+  const handleSubmit = useCallback(() => {
+    if (!user) {
+      throw new Error('User is not authenticated');
     }
 
-    setIsLoading(true);
-    try {
-      const response = await onSubmit(description);
-      setAccessToken(response.rawAPIKey);
-    } catch (err) {
-      onError('Failure', err, 'Failed to generate access token');
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    mutation.mutate(
+      { id: user.Id, description },
+      {
+        onSuccess(accessToken) {
+          setAccessToken(accessToken);
+        },
+      }
+    );
+  }, [mutation, description, user]);
 
   return (
     <Widget>
@@ -68,8 +58,8 @@ export function CreateAccessToken({
             />
           </FormControl>
           <Button
-            disabled={!!errorText || !!accessToken}
-            onClick={() => generateAccessToken()}
+            disabled={!!errorText || !!accessToken || mutation.isLoading}
+            onClick={() => handleSubmit()}
             className={styles.addButton}
           >
             Add access token
