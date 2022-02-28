@@ -1,6 +1,5 @@
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { useRouter } from '@uirouter/react';
-import { Trans, useTranslation } from 'react-i18next';
 
 import { Widget, WidgetBody } from '@/portainer/components/widget';
 import { FormControl } from '@/portainer/components/form-components/FormControl';
@@ -29,9 +28,6 @@ export function CreateAccessToken({
   onSubmit,
   onError,
 }: PropsWithChildren<Props>) {
-  const translationNS = 'account.accessTokens.create';
-  const { t } = useTranslation(translationNS);
-
   const router = useRouter();
   const [description, setDescription] = useState('');
   const [errorText, setErrorText] = useState('');
@@ -40,9 +36,9 @@ export function CreateAccessToken({
 
   useEffect(() => {
     if (description.length === 0) {
-      setErrorText(t('this field is required'));
+      setErrorText('this field is required');
     } else setErrorText('');
-  }, [description, t]);
+  }, [description]);
 
   async function generateAccessToken() {
     if (isLoading) {
@@ -64,11 +60,7 @@ export function CreateAccessToken({
     <Widget>
       <WidgetBody>
         <div>
-          <FormControl
-            inputId="input"
-            label={t('Description')}
-            errors={errorText}
-          >
+          <FormControl inputId="input" label="Description" errors={errorText}>
             <Input
               id="input"
               onChange={(e) => setDescription(e.target.value)}
@@ -80,30 +72,26 @@ export function CreateAccessToken({
             onClick={() => generateAccessToken()}
             className={styles.addButton}
           >
-            {t('Add access token')}
+            Add access token
           </Button>
         </div>
         {accessToken && (
           <>
-            <FormSectionTitle>
-              <Trans ns={translationNS}>New access token</Trans>
-            </FormSectionTitle>
+            <FormSectionTitle>New access token</FormSectionTitle>
             <TextTip>
-              <Trans ns={translationNS}>
-                Please copy the new access token. You won&#39;t be able to view
-                the token again.
-              </Trans>
+              Please copy the new access token. You won&#39;t be able to view
+              the token again.
             </TextTip>
             <Code>{accessToken}</Code>
             <CopyButton copyText={accessToken} className={styles.copyButton}>
-              <Trans ns={translationNS}>Copy access token</Trans>
+              Copy access token
             </CopyButton>
             <hr />
             <Button
               type="button"
               onClick={() => router.stateService.go('portainer.account')}
             >
-              <Trans ns={translationNS}>Done</Trans>
+              Done
             </Button>
           </>
         )}
