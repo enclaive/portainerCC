@@ -1,7 +1,5 @@
 import angular from 'angular';
 
-import { CreateAccessTokenAngular } from '../views/account/CreateAccessToken';
-
 import sidebarModule from './sidebar';
 import gitFormModule from './forms/git-form';
 import porAccessManagementModule from './accessManagement';
@@ -18,5 +16,4 @@ export default angular
   .module('portainer.app.components', [headerModule, boxSelectorModule, widgetModule, sidebarModule, gitFormModule, porAccessManagementModule, formComponentsModule])
   .component('portainerTooltip', TooltipAngular)
   .component('reactExample', ReactExampleAngular)
-  .component('beFeatureIndicator', beFeatureIndicatorAngular)
-  .component('createAccessToken', CreateAccessTokenAngular).name;
+  .component('beFeatureIndicator', beFeatureIndicatorAngular).name;
