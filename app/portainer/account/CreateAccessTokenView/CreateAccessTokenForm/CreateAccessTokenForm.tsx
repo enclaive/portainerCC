@@ -11,8 +11,7 @@ import { CopyButton } from '@/portainer/components/Button/CopyButton';
 import { Input } from '@/portainer/components/form-components/Input';
 import { useUser } from '@/portainer/hooks/useUser';
 import { trackEvent } from '@/angulartics.matomo/analytics-services';
-
-import { useCreateAccessTokenMutation } from '../queries';
+import { useCreateAccessTokenMutation } from '@/portainer/account/queries';
 
 import styles from './CreateAccessTokenForm.module.css';
 

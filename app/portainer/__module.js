@@ -120,7 +120,7 @@ angular
         url: '/tokens/new',
         views: {
           'content@': {
-            component: 'createUserAccessToken',
+            component: 'createAccessTokenView',
           },
         },
       };
