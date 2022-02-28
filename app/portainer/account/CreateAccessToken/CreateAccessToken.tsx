@@ -10,6 +10,7 @@ import { Code } from '@/portainer/components/Code';
 import { CopyButton } from '@/portainer/components/Button/CopyButton';
 import { Input } from '@/portainer/components/form-components/Input';
 import { useUser } from '@/portainer/hooks/useUser';
+import { trackEvent } from '@/angulartics.matomo/analytics-services';
 
 import { useCreateAccessTokenMutation } from '../queries';
 
@@ -41,6 +42,9 @@ export function CreateAccessToken() {
       {
         onSuccess(accessToken) {
           setAccessToken(accessToken);
+          trackEvent('portainer-account-access-token-create', {
+            category: 'portainer',
+          });
         },
       }
     );
