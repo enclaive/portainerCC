@@ -14,9 +14,9 @@ import { trackEvent } from '@/angulartics.matomo/analytics-services';
 
 import { useCreateAccessTokenMutation } from '../queries';
 
-import styles from './CreateAccessToken.module.css';
+import styles from './CreateAccessTokenForm.module.css';
 
-export function CreateAccessToken() {
+export function CreateAccessTokenForm() {
   const router = useRouter();
   const [description, setDescription] = useState('');
   const [errorText, setErrorText] = useState('');

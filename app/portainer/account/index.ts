@@ -1,6 +1,6 @@
 import angular from 'angular';
 
-import { CreateAccessTokenAngular } from './CreateAccessToken';
+import { CreateAccessTokenAngular } from './CreateAccessTokenForm';
 
 export const accountModule = angular
   .module('portainer.app.account', [])

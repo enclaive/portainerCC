@@ -5,7 +5,7 @@ import { server, rest } from '@/setup-tests/server';
 import { UserViewModel } from '@/portainer/models/user';
 import { UserContext } from '@/portainer/hooks/useUser';
 
-import { CreateAccessToken } from './CreateAccessToken';
+import { CreateAccessTokenForm } from './CreateAccessTokenForm';
 
 test('the button is disabled when description is missing and enabled when description is filled', async () => {
   const queries = renderComponent();
@@ -53,7 +53,7 @@ function renderComponent(accessToken = '') {
 
   const queries = renderWithQueryClient(
     <UserContext.Provider value={{ user }}>
-      <CreateAccessToken />
+      <CreateAccessTokenForm />
     </UserContext.Provider>
   );
 
