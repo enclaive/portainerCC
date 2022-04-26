@@ -57,13 +57,13 @@ if [ "$major" == 0 ] && [ "$minor" == 0 ] && [ "$patch" = 0 ]; then
 fi
 
 echo "Version will be changed to: ${NEW_VERSION}"
-# echo -n "Continue? [y/N]: "
-# read CONFIRM
+echo -n "Continue? [y/N]: "
+read CONFIRM
 
-# if [ "$CONFIRM" != "y" ]; then
-#     echo "Aborting"
-#     exit 1
-# fi
+if [ "$CONFIRM" != "y" ]; then
+    echo "Aborting"
+    exit 1
+fi
 
 
 tmp=$(mktemp)
