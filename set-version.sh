@@ -11,13 +11,19 @@
 #   sudo apt-get install jq
 
 CURRENT_VERSION=$(jq -r '.version' package.json)
+PROMPT=true
+
+if [ "$1" == "-s" ]; then
+    # automatically bump minor version with no prompting
+    PROMPT=false
+fi
 
 
 # Parse the major, minor and patch versions
 # out.
 # You use it like this:
 #    semver="3.4.5+xyz"
-#    a=($(parse_semver "$semver"))
+#    a=($(ParseSemVer "$semver"))
 #    major=${a[0]}
 #    minor=${a[1]}
 #    patch=${a[2]}
@@ -37,33 +43,43 @@ function ParseSemVer() {
     echo "$major $minor $patch"
 }
 
-echo "Current Portainer version: ${CURRENT_VERSION}"
-echo -n "New version [${CURRENT_VERSION}]: "
-read NEW_VERSION
+[ $PROMPT == true ] && { 
+    echo "Current Portainer version: ${CURRENT_VERSION}"
+}
 
-if [ -z "$NEW_VERSION" ]; then
-    echo "Version left unchanged."
-    exit 0
-fi
-
-a=($(ParseSemVer "$NEW_VERSION"))
+a=($(ParseSemVer "$CURRENT_VERSION"))
 major=${a[0]}
 minor=${a[1]}
 patch=${a[2]}
 
-if [ "$major" == 0 ] && [ "$minor" == 0 ] && [ "$patch" = 0 ]; then
-    echo "Invalid version format, must be major.minor.patch"
-    exit 1
-fi
+minor=$(($minor+1))
+NEW_VERSION="${major}.${minor}.${patch}"
 
-echo "Version will be changed to: ${NEW_VERSION}"
-echo -n "Continue? [y/N]: "
-read CONFIRM
+[ $PROMPT == true ] && { 
+    echo -n "New Portainer version: [${NEW_VERSION}]: "
+    read -r inp
 
-if [ "$CONFIRM" != "y" ]; then
-    echo "Aborting"
-    exit 1
-fi
+    [[ ! -z "$inp" ]] && NEW_VERSION="$inp"
+
+    a=($(ParseSemVer "$NEW_VERSION"))
+    major=${a[0]}
+    minor=${a[1]}
+    patch=${a[2]}
+
+    if [ "$major" == 0 ] && [ "$minor" == 0 ] && [ "$patch" = 0 ]; then
+        echo "Invalid version format, must be major.minor.patch"
+        exit 1
+    fi
+
+    echo "Version will be changed to: ${NEW_VERSION}"
+    echo -n "Continue? [y/N]: "
+    read -r inp
+
+    if [ "$inp" != "y" ]; then
+        echo "Version left unchanged"
+        exit 1
+    fi
+}
 
 
 tmp=$(mktemp)
@@ -71,15 +87,15 @@ tmp=$(mktemp)
 # Change version in package.json
 filename="package.json"
 jq --arg a "$NEW_VERSION" '.version = $a' package.json > "$tmp" && mv "$tmp" "$filename"
-echo "updated $filename"
+echo "Updated $filename."
 
 # Update portainer.go
 filename="api/portainer.go"
 sed -E "s/^([[:blank:]]*APIVersion[[:blank:]]*=[[:blank:]]*).*/\1\"$NEW_VERSION\"/" "$filename" > "$tmp" && mv "$tmp" "$filename"
-echo "updated $filename"
+echo "Updated $filename."
 
 # Change @version in handler/handler.go
 filename="api/http/handler/handler.go"
 sed -E "s|// @version .*|// @version $NEW_VERSION|" "$filename" > "$tmp" && mv "$tmp" "$filename"
-echo "updated $filename"
+echo "Updated $filename."
 
