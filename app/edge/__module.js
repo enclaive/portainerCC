@@ -8,10 +8,13 @@ import edgeStackModule from './views/edge-stacks';
 import { componentsModule } from './components';
 import { WaitingRoomView } from './EdgeDevices/WaitingRoomView';
 import { reactModule } from './react';
+import { EdgeDevicesView } from './EdgeDevices/EdgeDevicesView';
 
 angular
   .module('portainer.edge', [edgeStackModule, componentsModule, reactModule])
   .component('waitingRoomView', r2a(withUIRouter(withReactQuery(withCurrentUser(WaitingRoomView))), []))
+  .component('edgeDevicesView', r2a(withUIRouter(withReactQuery(withCurrentUser(EdgeDevicesView))), []))
+
   .config(function config($stateRegistryProvider) {
     const edge = {
       name: 'edge',

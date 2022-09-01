@@ -1,4 +1,6 @@
 import _ from 'lodash';
+import { useStore } from 'zustand';
+import { Box } from 'react-feather';
 
 import { DockerContainer } from '@/react/docker/containers/types';
 import { Environment } from '@/portainer/environments/types';
@@ -14,12 +16,13 @@ import {
   QuickActionsSettings,
 } from '@@/datatables/QuickActionsSettings';
 import { ColumnVisibilityMenu } from '@@/datatables/ColumnVisibilityMenu';
+import { useSearchBarState } from '@@/datatables/SearchBar';
 
 import { useContainers } from '../../containers/queries/containers';
 import { RowProvider } from '../../containers/ListView/ContainersDatatable/RowContext';
 
 const storageKey = 'stack-containers';
-const useStore = createStore(storageKey);
+const settingsStore = createStore(storageKey);
 
 const actions = [
   buildAction('logs', 'Logs'),
@@ -35,9 +38,12 @@ export interface Props {
 }
 
 export function StackContainersDatatable({ environment, stackName }: Props) {
-  const settings = useStore();
+  const settings = useStore(settingsStore);
+  const [search, setSearch] = useSearchBarState(storageKey);
+
   const isGPUsColumnVisible = useShowGPUsColumn(environment.Id);
   const columns = useColumns(false, isGPUsColumnVisible);
+
   const hidableColumns = _.compact(
     columns.filter((col) => col.canHide).map((col) => col.id)
   );
@@ -54,11 +60,14 @@ export function StackContainersDatatable({ environment, stackName }: Props) {
   return (
     <RowProvider context={{ environment }}>
       <Datatable
-        titleOptions={{
-          icon: 'fa-cubes',
-          title: 'Containers',
-        }}
-        settingsStore={settings}
+        title="Containers"
+        titleIcon={Box}
+        initialPageSize={settings.pageSize}
+        onPageSizeChange={settings.setPageSize}
+        initialSortBy={settings.sortBy}
+        onSortByChange={settings.setSortBy}
+        searchValue={search}
+        onSearchChange={setSearch}
         columns={columns}
         renderTableActions={(selectedRows) => (
           <ContainersDatatableActions
@@ -91,7 +100,6 @@ export function StackContainersDatatable({ environment, stackName }: Props) {
             </>
           );
         }}
-        storageKey={storageKey}
         dataset={containersQuery.data || []}
         isLoading={containersQuery.isLoading}
         emptyContentLabel="No containers found"
