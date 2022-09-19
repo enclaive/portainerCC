@@ -1,5 +1,5 @@
 import { Terminal } from 'xterm';
-import * as fit from 'xterm/lib/addons/fit/fit';
+import { FitAddon } from 'xterm-addon-fit';
 import { baseHref } from '@/portainer/helpers/pathHelper';
 
 export default class KubectlShellController {
@@ -46,19 +46,20 @@ export default class KubectlShellController {
     }
   }
 
-  configureSocketAndTerminal(socket, term) {
+  configureSocketAndTerminal(socket, term, fitAddon) {
     socket.onopen = () => {
       const terminal_container = document.getElementById('terminal-container');
+      term.loadAddon(fitAddon);
       term.open(terminal_container);
       term.setOption('cursorBlink', true);
       term.focus();
-      term.fit();
+      fitAddon.fit();
       term.writeln('#Run kubectl commands inside here');
       term.writeln('#e.g. kubectl get all');
       term.writeln('');
     };
 
-    term.on('data', (data) => {
+    term.onData(function (data) {
       socket.send(data);
     });
 
@@ -100,11 +101,11 @@ export default class KubectlShellController {
       .join('&');
 
     const url = `${wsProtocol}${base}?${queryParams}`;
-    Terminal.applyAddon(fit);
     this.state.shell.socket = new WebSocket(url);
-    this.state.shell.term = new Terminal();
+    this.state.shell.term = new Terminal({ cursorBlink: true });
+    this.state.shell.fitAddon = new FitAddon();
 
-    this.configureSocketAndTerminal(this.state.shell.socket, this.state.shell.term);
+    this.configureSocketAndTerminal(this.state.shell.socket, this.state.shell.term, this.state.shell.fitAddon);
   }
 
   $onInit() {
