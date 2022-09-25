@@ -1,7 +1,6 @@
-import { useRouter } from '@uirouter/react';
-
 import { useEnvironmentList } from '@/portainer/environments/queries/useEnvironmentList';
 import { EdgeTypes } from '@/portainer/environments/types';
+import { withLimitToBE } from '@/react/hooks/useLimitToBE';
 
 import { InformationPanel } from '@@/InformationPanel';
 import { TextTip } from '@@/Tip/TextTip';
@@ -11,20 +10,16 @@ import { PageHeader } from '@@/PageHeader';
 import { DataTable } from './Datatable/Datatable';
 import { TableSettings } from './Datatable/types';
 
-export function WaitingRoomView() {
+export default withLimitToBE(WaitingRoomView);
+
+function WaitingRoomView() {
   const storageKey = 'edge-devices-waiting-room';
-  const router = useRouter();
   const { environments, isLoading, totalCount } = useEnvironmentList({
     edgeDevice: true,
     edgeDeviceUntrusted: true,
     excludeSnapshots: true,
     types: EdgeTypes,
   });
-
-  if (process.env.PORTAINER_EDITION !== 'BE') {
-    router.stateService.go('edge.devices');
-    return null;
-  }
 
   return (
     <>
