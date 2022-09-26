@@ -10,7 +10,6 @@ import (
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
 	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/edge/stacks"
 	"github.com/portainer/portainer/api/filesystem"
 	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/portainer/portainer/api/http/security"
@@ -103,7 +102,7 @@ func (handler *Handler) createSwarmStackFromFileContent(r *http.Request, dryrun 
 		return nil, err
 	}
 
-	stack, err := stacks.NewEdgeStackObject(payload.Name, payload.DeploymentType, payload.EdgeGroups, payload.Registries, handler.DataStore.EdgeStack())
+	stack, err := handler.edgeStacksService.BuildEdgeStack(payload.Name, payload.DeploymentType, payload.EdgeGroups, payload.Registries)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create Edge stack object")
 	}
@@ -112,7 +111,7 @@ func (handler *Handler) createSwarmStackFromFileContent(r *http.Request, dryrun 
 		return stack, nil
 	}
 
-	return stacks.PersistEdgeStackObject(stack, handler.DataStore, func(stackFolder string, relatedEndpointIds []portainer.EndpointID) (composePath string, manifestPath string, projectPath string, err error) {
+	return handler.edgeStacksService.PersistEdgeStack(stack, func(stackFolder string, relatedEndpointIds []portainer.EndpointID) (composePath string, manifestPath string, projectPath string, err error) {
 		return handler.storeFileContent(stackFolder, payload.DeploymentType, relatedEndpointIds, []byte(payload.StackFileContent))
 	})
 
@@ -219,7 +218,7 @@ func (handler *Handler) createSwarmStackFromGitRepository(r *http.Request, dryru
 		return nil, err
 	}
 
-	stack, err := stacks.NewEdgeStackObject(payload.Name, payload.DeploymentType, payload.EdgeGroups, payload.Registries, handler.DataStore.EdgeStack())
+	stack, err := handler.edgeStacksService.BuildEdgeStack(payload.Name, payload.DeploymentType, payload.EdgeGroups, payload.Registries)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create edge stack object")
 	}
@@ -240,7 +239,7 @@ func (handler *Handler) createSwarmStackFromGitRepository(r *http.Request, dryru
 		}
 	}
 
-	return stacks.PersistEdgeStackObject(stack, handler.DataStore, func(stackFolder string, relatedEndpointIds []portainer.EndpointID) (composePath string, manifestPath string, projectPath string, err error) {
+	return handler.edgeStacksService.PersistEdgeStack(stack, func(stackFolder string, relatedEndpointIds []portainer.EndpointID) (composePath string, manifestPath string, projectPath string, err error) {
 		return handler.storeManifestFromGitRepository(stackFolder, relatedEndpointIds, payload.DeploymentType, userID, repoConfig)
 	})
 }
@@ -301,7 +300,7 @@ func (handler *Handler) createSwarmStackFromFileUpload(r *http.Request, dryrun b
 		return nil, err
 	}
 
-	stack, err := stacks.NewEdgeStackObject(payload.Name, payload.DeploymentType, payload.EdgeGroups, payload.Registries, handler.DataStore.EdgeStack())
+	stack, err := handler.edgeStacksService.BuildEdgeStack(payload.Name, payload.DeploymentType, payload.EdgeGroups, payload.Registries)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create edge stack object")
 	}
@@ -310,7 +309,7 @@ func (handler *Handler) createSwarmStackFromFileUpload(r *http.Request, dryrun b
 		return stack, nil
 	}
 
-	return stacks.PersistEdgeStackObject(stack, handler.DataStore, func(stackFolder string, relatedEndpointIds []portainer.EndpointID) (composePath string, manifestPath string, projectPath string, err error) {
+	return handler.edgeStacksService.PersistEdgeStack(stack, func(stackFolder string, relatedEndpointIds []portainer.EndpointID) (composePath string, manifestPath string, projectPath string, err error) {
 		return handler.storeFileContent(stackFolder, payload.DeploymentType, relatedEndpointIds, payload.StackFileContent)
 	})
 }
