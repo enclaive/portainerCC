@@ -27,6 +27,7 @@ import { Filter } from '@/portainer/home/types';
 import { useAgentVersionsList } from '@/portainer/environments/queries/useAgentVersionsList';
 import { EnvironmentsQueryParams } from '@/portainer/environments/environment.service';
 import { useUser } from '@/portainer/hooks/useUser';
+import { isBE } from '@/portainer/feature-flags/feature-flags.service';
 
 import { TableFooter } from '@@/datatables/TableFooter';
 import { TableActions, TableContainer, TableTitle } from '@@/datatables';
@@ -353,6 +354,7 @@ export function EnvironmentList({ onClickItem, onRefresh }: Props) {
         EnvironmentType.AgentOnKubernetes,
         EnvironmentType.EdgeAgentOnKubernetes,
       ],
+      [PlatformType.Nomad]: [EnvironmentType.EdgeAgentOnNomad],
     };
 
     const typesByConnection = {
@@ -478,6 +480,7 @@ function getConnectionTypeOptions(platformTypes: Filter<PlatformType>[]) {
       ConnectionType.EdgeAgent,
       ConnectionType.EdgeDevice,
     ],
+    [PlatformType.Nomad]: [ConnectionType.EdgeAgent, ConnectionType.EdgeDevice],
   };
 
   const connectionTypesDefaultOptions = [
@@ -504,6 +507,13 @@ function getPlatformTypeOptions(connectionTypes: Filter<ConnectionType>[]) {
     { value: PlatformType.Kubernetes, label: 'Kubernetes' },
   ];
 
+  if (isBE) {
+    platformDefaultOptions.push({
+      value: PlatformType.Nomad,
+      label: 'Nomad',
+    });
+  }
+
   if (connectionTypes.length === 0) {
     return platformDefaultOptions;
   }
@@ -511,8 +521,16 @@ function getPlatformTypeOptions(connectionTypes: Filter<ConnectionType>[]) {
   const connectionTypePlatformType = {
     [ConnectionType.API]: [PlatformType.Docker, PlatformType.Azure],
     [ConnectionType.Agent]: [PlatformType.Docker, PlatformType.Kubernetes],
-    [ConnectionType.EdgeAgent]: [PlatformType.Kubernetes, PlatformType.Docker],
-    [ConnectionType.EdgeDevice]: [PlatformType.Docker, PlatformType.Kubernetes],
+    [ConnectionType.EdgeAgent]: [
+      PlatformType.Kubernetes,
+      PlatformType.Nomad,
+      PlatformType.Docker,
+    ],
+    [ConnectionType.EdgeDevice]: [
+      PlatformType.Nomad,
+      PlatformType.Docker,
+      PlatformType.Kubernetes,
+    ],
   };
 
   return _.compact(
