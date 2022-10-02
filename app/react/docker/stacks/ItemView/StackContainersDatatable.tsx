@@ -17,6 +17,7 @@ import {
 } from '@@/datatables/QuickActionsSettings';
 import { ColumnVisibilityMenu } from '@@/datatables/ColumnVisibilityMenu';
 import { useSearchBarState } from '@@/datatables/SearchBar';
+import { TableSettingsProvider } from '@@/datatables/useTableSettings';
 
 import { useContainers } from '../../containers/queries/containers';
 import { RowProvider } from '../../containers/ListView/ContainersDatatable/RowContext';
@@ -59,51 +60,53 @@ export function StackContainersDatatable({ environment, stackName }: Props) {
 
   return (
     <RowProvider context={{ environment }}>
-      <Datatable
-        title="Containers"
-        titleIcon={Box}
-        initialPageSize={settings.pageSize}
-        onPageSizeChange={settings.setPageSize}
-        initialSortBy={settings.sortBy}
-        onSortByChange={settings.setSortBy}
-        searchValue={search}
-        onSearchChange={setSearch}
-        columns={columns}
-        renderTableActions={(selectedRows) => (
-          <ContainersDatatableActions
-            selectedItems={selectedRows}
-            isAddActionVisible={false}
-            endpointId={environment.Id}
-          />
-        )}
-        initialTableState={{ hiddenColumns: settings.hiddenColumns }}
-        renderTableSettings={(tableInstance) => {
-          const columnsToHide = tableInstance.allColumns.filter((colInstance) =>
-            hidableColumns?.includes(colInstance.id)
-          );
+      <TableSettingsProvider settings={settingsStore}>
+        <Datatable
+          title="Containers"
+          titleIcon={Box}
+          initialPageSize={settings.pageSize}
+          onPageSizeChange={settings.setPageSize}
+          initialSortBy={settings.sortBy}
+          onSortByChange={settings.setSortBy}
+          searchValue={search}
+          onSearchChange={setSearch}
+          columns={columns}
+          renderTableActions={(selectedRows) => (
+            <ContainersDatatableActions
+              selectedItems={selectedRows}
+              isAddActionVisible={false}
+              endpointId={environment.Id}
+            />
+          )}
+          initialTableState={{ hiddenColumns: settings.hiddenColumns }}
+          renderTableSettings={(tableInstance) => {
+            const columnsToHide = tableInstance.allColumns.filter(
+              (colInstance) => hidableColumns?.includes(colInstance.id)
+            );
 
-          return (
-            <>
-              <ColumnVisibilityMenu<DockerContainer>
-                columns={columnsToHide}
-                onChange={(hiddenColumns) => {
-                  settings.setHiddenColumns(hiddenColumns);
-                  tableInstance.setHiddenColumns(hiddenColumns);
-                }}
-                value={settings.hiddenColumns}
-              />
-              <TableSettingsMenu
-                quickActions={<QuickActionsSettings actions={actions} />}
-              >
-                <ContainersDatatableSettings settings={settings} />
-              </TableSettingsMenu>
-            </>
-          );
-        }}
-        dataset={containersQuery.data || []}
-        isLoading={containersQuery.isLoading}
-        emptyContentLabel="No containers found"
-      />
+            return (
+              <>
+                <ColumnVisibilityMenu<DockerContainer>
+                  columns={columnsToHide}
+                  onChange={(hiddenColumns) => {
+                    settings.setHiddenColumns(hiddenColumns);
+                    tableInstance.setHiddenColumns(hiddenColumns);
+                  }}
+                  value={settings.hiddenColumns}
+                />
+                <TableSettingsMenu
+                  quickActions={<QuickActionsSettings actions={actions} />}
+                >
+                  <ContainersDatatableSettings settings={settings} />
+                </TableSettingsMenu>
+              </>
+            );
+          }}
+          dataset={containersQuery.data || []}
+          isLoading={containersQuery.isLoading}
+          emptyContentLabel="No containers found"
+        />
+      </TableSettingsProvider>
     </RowProvider>
   );
 }
