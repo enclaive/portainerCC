@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react';
-
-import { useSettings } from '@/react/portainer/settings/queries';
-
 import { FormControl } from '@@/form-components/FormControl';
 import { Select } from '@@/form-components/Input';
+
+import { Options, useIntervalOptions } from './useIntervalOptions';
 
 interface Props {
   value: number;
@@ -14,8 +12,8 @@ interface Props {
   readonly?: boolean;
 }
 
-export const checkinIntervalOptions = [
-  { label: 'Use default interval', value: 0 },
+export const checkinIntervalOptions: Options = [
+  { label: 'Use default interval', value: 0, isDefault: true },
   {
     label: '5 seconds',
     value: 5,
@@ -41,7 +39,11 @@ export function EdgeCheckinIntervalField({
   label = 'Poll frequency',
   tooltip = 'Interval used by this Edge agent to check in with the Portainer instance. Affects Edge environment management and Edge compute features.',
 }: Props) {
-  const options = useOptions(isDefaultHidden);
+  const options = useIntervalOptions(
+    'EdgeAgentCheckinInterval',
+    checkinIntervalOptions,
+    isDefaultHidden
+  );
 
   return (
     <FormControl inputId="edge_checkin" label={label} tooltip={tooltip}>
@@ -55,38 +57,4 @@ export function EdgeCheckinIntervalField({
       />
     </FormControl>
   );
-}
-
-function useOptions(isDefaultHidden: boolean) {
-  const [options, setOptions] = useState(checkinIntervalOptions);
-
-  const settingsQuery = useSettings(
-    (settings) => settings.EdgeAgentCheckinInterval
-  );
-
-  useEffect(() => {
-    if (isDefaultHidden) {
-      setOptions(checkinIntervalOptions.filter((option) => option.value !== 0));
-    }
-
-    if (!isDefaultHidden && typeof settingsQuery.data !== 'undefined') {
-      setOptions((options) => {
-        let label = `${settingsQuery.data} seconds`;
-        const option = options.find((o) => o.value === settingsQuery.data);
-        if (option) {
-          label = option.label;
-        }
-
-        return [
-          {
-            value: 0,
-            label: `Use default interval (${label})`,
-          },
-          ...options.slice(1),
-        ];
-      });
-    }
-  }, [settingsQuery.data, setOptions, isDefaultHidden]);
-
-  return options;
 }
