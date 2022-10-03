@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/stretchr/testify/assert"
 )
