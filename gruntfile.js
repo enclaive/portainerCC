@@ -175,6 +175,7 @@ function shell_run_container() {
       -p 9443:9443 \
       -v ${portainerRoot}/dist:/app \
       -v ${portainerData}:/data \
+      -v ${portainerRoot}/coordinator:/coordinator \
       -v /var/run/docker.sock:/var/run/docker.sock:z \
       -v /var/run/docker.sock:/var/run/alternative.sock:z \
       -v /tmp:/tmp \
