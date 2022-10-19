@@ -24,6 +24,7 @@ type (
 		BackupTo(w io.Writer) error
 		Export(filename string) (err error)
 		IsErrObjectNotFound(err error) bool
+		Coordinator() CoordinatorService
 		CustomTemplate() CustomTemplateService
 		EdgeGroup() EdgeGroupService
 		EdgeJob() EdgeJobService
@@ -49,6 +50,15 @@ type (
 		User() UserService
 		Version() VersionService
 		Webhook() WebhookService
+	}
+
+	// CoordinatorService for managing coordinators
+	CoordinatorService interface {
+		Coordinators() ([]portainer.Coordinator, error)
+		Coordinator(ID portainer.CoordinatorID) (*portainer.Coordinator, error)
+		Create(coordinatorObject *portainer.Coordinator) error
+		Update(ID portainer.CoordinatorID, keyObject *portainer.Coordinator) error
+		Delete(ID portainer.CoordinatorID) error
 	}
 
 	// CustomTemplateService represents a service to manage custom templates

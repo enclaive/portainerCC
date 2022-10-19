@@ -2,7 +2,7 @@ package ra
 
 import (
 	"net/http"
-	
+
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
 	portainer "github.com/portainer/portainer/api"
@@ -36,6 +36,7 @@ func NewHandler(bouncer requestBouncer, dockerClientFactory *docker.ClientFactor
 
 	h.Handle("/ra/coordinator/build",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorBuild))).Methods(http.MethodPost)
-
+	h.Handle("/ra/coordinator/list",
+		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorList))).Methods(http.MethodGet)
 	return h
 }

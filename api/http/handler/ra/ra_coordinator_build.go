@@ -2,7 +2,12 @@ package ra
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -17,7 +22,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type PostCoordinatorParams struct {
+	Name         string
+	SigningKeyId int
+}
+
 func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+	var params PostCoordinatorParams
+	err := json.NewDecoder(r.Body).Decode(&params)
+
+	if err != nil {
+		return &httperror.HandlerError{http.StatusBadRequest, "request body maleformed", err}
+	}
+
 	endpoints, err := handler.DataStore.Endpoint().Endpoints()
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve environments", err)
@@ -35,22 +52,40 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		// panic(err)
 	}
 
-	files, err := ioutil.ReadDir("/")
+	fileContent, err := ioutil.ReadFile("/coordinator/build/private.pem")
 	if err != nil {
-		panic(err)
+		log.Fatal().Msg(err.Error())
 	}
 
-	for _, file := range files {
-		log.Info().Msg(file.Name())
-	}
+	//:TODO read signing key from db and convert it to pem format
+	key, err := rsa.GenerateKey(rand.Reader, 3072)
+	keyBytes := x509.MarshalPKCS1PrivateKey(key)
+	keyPEM :=
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: keyBytes,
+		}
+
+	var PrivateKeyRow bytes.Buffer
+	err = pem.Encode(&PrivateKeyRow, keyPEM)
+
+	// signingKey := PrivateKeyRow.String()
+	signingKey := string(fileContent)
+
+	// archive coordinator source code
 	tar, err := archive.Tar("/coordinator", archive.Gzip)
 	if err != nil {
 		panic(err)
 	}
+
+	// set build options for image build
 	opts := types.ImageBuildOptions{
 		Dockerfile: "./dockerfile/Dockerfile.coordinator",
-		Tags:       []string{"coordinator"},
+		Tags:       []string{"coordinator/" + params.Name},
+		BuildArgs:  map[string]*string{"signingkey": &signingKey},
 	}
+
+	// send image build request
 	res, err := client.ImageBuild(r.Context(), tar, opts)
 	if err != nil {
 		return httperror.InternalServerError("Unable to build Coordinator image", err)
@@ -58,7 +93,16 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 	defer res.Body.Close()
 	err = print(res.Body)
 
-	return response.JSON(w, res)
+	// create new coordinator in database
+	coordinatorObject := &portainer.Coordinator{
+		Name:         params.Name,
+		SigningKeyID: params.SigningKeyId,
+	}
+	err = handler.DataStore.Coordinator().Create(coordinatorObject)
+	if err != nil {
+		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to generate new coordinator", err}
+	}
+	return response.JSON(w, coordinatorObject)
 }
 
 type ErrorLine struct {
@@ -76,7 +120,7 @@ func print(rd io.Reader) error {
 	scanner := bufio.NewScanner(rd)
 	for scanner.Scan() {
 		lastLine = scanner.Text()
-		log.Info().Str("Docker", scanner.Text()).Msg(scanner.Text())
+		log.Info().Str("Docker", "").Msg(scanner.Text())
 	}
 
 	errLine := &ErrorLine{}

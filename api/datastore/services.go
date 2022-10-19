@@ -9,6 +9,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/dataservices/apikeyrepository"
+	"github.com/portainer/portainer/api/dataservices/coordinator"
 	"github.com/portainer/portainer/api/dataservices/customtemplate"
 	"github.com/portainer/portainer/api/dataservices/dockerhub"
 	"github.com/portainer/portainer/api/dataservices/edgegroup"
@@ -46,6 +47,7 @@ type Store struct {
 	connection portainer.Connection
 
 	fileService               portainer.FileService
+	CoordinatorService        *coordinator.Service
 	CustomTemplateService     *customtemplate.Service
 	DockerHubService          *dockerhub.Service
 	EdgeGroupService          *edgegroup.Service
@@ -82,6 +84,12 @@ func (store *Store) initServices() error {
 		return err
 	}
 	store.RoleService = authorizationsetService
+
+	coordinatorService, err := coordinator.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.CoordinatorService = coordinatorService
 
 	customTemplateService, err := customtemplate.NewService(store.connection)
 	if err != nil {
@@ -246,6 +254,11 @@ func (store *Store) initServices() error {
 	store.ScheduleService = scheduleService
 
 	return nil
+}
+
+// CoordinatorService gives access to the coordinator management layer
+func (store *Store) Coordinator() dataservices.CoordinatorService {
+	return store.CoordinatorService
 }
 
 // CustomTemplate gives access to the CustomTemplate data management layer

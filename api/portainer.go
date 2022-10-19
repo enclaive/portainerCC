@@ -132,6 +132,14 @@ type (
 		LogLevel                  *string
 	}
 
+	Coordinator struct {
+		ID           CoordinatorID `json:"id"`
+		Name         string        `json:"name"`
+		SigningKeyID int           `json:"signingKeyId"`
+	}
+
+	CoordinatorID int
+
 	// CustomTemplateVariableDefinition
 	CustomTemplateVariableDefinition struct {
 		Name         string `json:"name" example:"MY_VAR"`

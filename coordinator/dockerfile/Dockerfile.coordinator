@@ -1,18 +1,20 @@
 # syntax=docker/dockerfile:experimental
 
-#FROM alpine/git:latest AS pull
-#RUN git clone https://github.com/edgelesssys/marblerun.git /coordinator
-
 FROM ghcr.io/edgelesssys/edgelessrt-dev AS build
+ARG signingkey
+#RUN echo "$SIGNINGKEY"
 COPY . /coordinator
 WORKDIR /coordinator/build
 RUN cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-#RUN --mount=type=secret,id=signingkey,dst=/coordinator/build/private.pem,required=true 
+# RUN --mount=type=secret,id=signingkey,dst=/coordinator/build/private.pem,required=true make sign-coordinator coordinator-noenclave
+RUN echo "$signingkey" > /coordinator/build/private.pem
+RUN cat /coordinator/build/private.pem 
+
 RUN make sign-coordinator coordinator-noenclave
-#COPY ./build/private.pem /coordinator/build/private.pem
+#COPY ./build/private.pem /coordinator/build/private.pem 
+#RUN cat /coordinator/build/private.pem
 
 FROM ghcr.io/edgelesssys/edgelessrt-deploy AS release
 LABEL description="EdgelessCoordinator"
-COPY ./dockerfile/start.sh /
-COPY --from=build /coordinator/build/coordinator-enclave.signed /coordinator/build/coordinator-noenclave /coordinator/build/coordinator-config.json /
-ENTRYPOINT ["/coordinator-noenclave"]
+COPY --from=build /coordinator/build/coordinator-enclave.signed /coordinator/build/coordinator-noenclave /coordinator/build/coordinator-config.json /coordinator/dockerfile/start.sh /
+ENTRYPOINT ["/start.sh"]
