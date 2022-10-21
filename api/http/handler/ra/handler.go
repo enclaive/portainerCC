@@ -26,17 +26,25 @@ type Handler struct {
 	demoService         *demo.Service
 	DataStore           dataservices.DataStore
 	dockerClientFactory *docker.ClientFactory
+	DockerClientFactory *docker.ClientFactory
 }
 
 func NewHandler(bouncer requestBouncer, dockerClientFactory *docker.ClientFactory) *Handler {
 	h := &Handler{
-		Router:         mux.NewRouter(),
-		requestBouncer: bouncer,
+		Router:              mux.NewRouter(),
+		requestBouncer:      bouncer,
+		dockerClientFactory: dockerClientFactory,
 	}
 
 	h.Handle("/ra/coordinator/build",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorBuild))).Methods(http.MethodPost)
 	h.Handle("/ra/coordinator/list",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorList))).Methods(http.MethodGet)
+	h.Handle("/ra/coordinator/{id}",
+		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorGet))).Methods(http.MethodGet)
+	h.Handle("/ra/coordinator/{id}",
+		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorDelete))).Methods(http.MethodDelete)
+	h.Handle("/ra/coordinator/deploy",
+		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorDeploy))).Methods(http.MethodPost)
 	return h
 }

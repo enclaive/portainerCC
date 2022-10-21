@@ -135,6 +135,7 @@ type (
 	Coordinator struct {
 		ID           CoordinatorID `json:"id"`
 		Name         string        `json:"name"`
+		ImageID      string        `json:"imageId"`
 		SigningKeyID int           `json:"signingKeyId"`
 	}
 

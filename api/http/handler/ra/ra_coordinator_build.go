@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/archive"
@@ -35,6 +36,7 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		return &httperror.HandlerError{http.StatusBadRequest, "request body maleformed", err}
 	}
 
+	// get local docker environment
 	endpoints, err := handler.DataStore.Endpoint().Endpoints()
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve environments", err)
@@ -46,6 +48,8 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 			log.Info().Msg(localEndpoint.URL)
 		}
 	}
+
+	// create docker API client
 	client, err := handler.dockerClientFactory.CreateClient(&localEndpoint, "", nil)
 	if err != nil {
 		log.Err(err)
@@ -93,10 +97,17 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 	defer res.Body.Close()
 	err = print(res.Body)
 
+	// get image id of built image
+	imgMeta, _, err := client.ImageInspectWithRaw(r.Context(), "coordinator/"+params.Name)
+	if err != nil {
+		return httperror.InternalServerError("Unable to retrieve new coordinators image id", err)
+	}
+
 	// create new coordinator in database
 	coordinatorObject := &portainer.Coordinator{
 		Name:         params.Name,
 		SigningKeyID: params.SigningKeyId,
+		ImageID:      strings.Split(imgMeta.ID, ":")[1],
 	}
 	err = handler.DataStore.Coordinator().Create(coordinatorObject)
 	if err != nil {
