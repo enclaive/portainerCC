@@ -15,6 +15,15 @@ type KeyParams struct {
 	Data               string
 }
 
+type UpdateKeyParams struct {
+	TeamAccessPolicies portainer.TeamAccessPolicies
+}
+
+type ExportKey struct {
+	Id  int
+	PEM string
+}
+
 func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	var params KeyParams
 	err := json.NewDecoder(r.Body).Decode(&params)
