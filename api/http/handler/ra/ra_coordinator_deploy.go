@@ -51,13 +51,16 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	// create local docker API client
 	localClient, err := handler.dockerClientFactory.CreateClient(&localEndpoint, "", nil)
 	if err != nil {
-		log.Err(err)
-		// panic(err)
+		return httperror.InternalServerError("could not create local docker client", err)
 	}
 
 	// get requested coordinator image
 	image, err := localClient.ImageSave(r.Context(), []string{coordinator.ImageID})
+	if err != nil {
+		return httperror.InternalServerError("could not export coordinator image", err)
+	}
 	defer image.Close()
+
 	localClient.Close()
 
 	// get target environment
@@ -98,6 +101,7 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 				"EDG_COORDINATOR_DNS_NAMES=coordinator",
 				"EDG_COORDINATOR_PROMETHEUS_ADDR=0.0.0.0:9944",
 			},
+			Domainname: "coordinator",
 		},
 		&container.HostConfig{
 			PortBindings: nat.PortMap{
@@ -143,7 +147,30 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 		return httperror.InternalServerError("unable to create coordinator container", err)
 	}
 
-	res := targetClient.ContainerStart(r.Context(), createdBody.ID, types.ContainerStartOptions{})
+	var networkID string
 
-	return response.JSON(w, res)
+	// check if coordinator network exists
+	networkResource, err := targetClient.NetworkInspect(r.Context(), "coordinator", types.NetworkInspectOptions{})
+	if err != nil {
+		// create coordinator network
+		createNetworkResponse, err := targetClient.NetworkCreate(r.Context(), "coordinator", types.NetworkCreate{})
+		if err != nil {
+			return httperror.InternalServerError("could not create coordinator network", err)
+		}
+		networkID = createNetworkResponse.ID
+	} else {
+		networkID = networkResource.ID
+	}
+
+	// connect container to coordinator network
+	err = targetClient.NetworkConnect(r.Context(), networkID, createdBody.ID, &network.EndpointSettings{})
+	if err != nil {
+		return httperror.InternalServerError("could not connect container to coordinator network", err)
+	}
+
+	// start coordinator container
+	_ = targetClient.ContainerStart(r.Context(), createdBody.ID, types.ContainerStartOptions{})
+
+	targetClient.Close()
+	return response.JSON(w, portainer.StatusOk)
 }
