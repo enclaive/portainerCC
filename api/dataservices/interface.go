@@ -49,6 +49,7 @@ type (
 		User() UserService
 		Version() VersionService
 		Webhook() WebhookService
+		Key() KeyService
 	}
 
 	// CustomTemplateService represents a service to manage custom templates
@@ -319,6 +320,11 @@ type (
 		WebhookByToken(token string) (*portainer.Webhook, error)
 		DeleteWebhook(ID portainer.WebhookID) error
 		BucketName() string
+	}
+
+	KeyService interface {
+		Keys() ([]portainer.Key, error)
+		Create(keyObject *portainer.Key, data string)
 	}
 )
 
