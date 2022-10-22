@@ -87,6 +87,7 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		Dockerfile: "./dockerfile/Dockerfile.coordinator",
 		Tags:       []string{"coordinator/" + params.Name},
 		BuildArgs:  map[string]*string{"signingkey": &signingKey},
+		Outputs:    []types.ImageBuildOutput{},
 	}
 
 	// send image build request
@@ -102,6 +103,8 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve new coordinators image id", err)
 	}
+
+	// TODO extract MRENCLAVE and MRSIGNER
 
 	// create new coordinator in database
 	coordinatorObject := &portainer.Coordinator{

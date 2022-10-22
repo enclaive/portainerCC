@@ -16,5 +16,5 @@ RUN make sign-coordinator coordinator-noenclave
 
 FROM ghcr.io/edgelesssys/edgelessrt-deploy AS release
 LABEL description="EdgelessCoordinator"
-COPY --from=build /coordinator/build/coordinator-enclave.signed /coordinator/build/coordinator-noenclave /coordinator/build/coordinator-config.json /coordinator/dockerfile/start.sh /
+COPY --from=build /coordinator/build/coordinator-config.json /coordinator/build/coordinator-enclave.signed /coordinator/build/coordinator-noenclave /coordinator/build/coordinator-config.json /coordinator/dockerfile/start.sh /
 ENTRYPOINT ["/coordinator-noenclave"]
