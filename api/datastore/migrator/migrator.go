@@ -8,7 +8,6 @@ import (
 	"github.com/portainer/portainer/api/dataservices/endpointrelation"
 	"github.com/portainer/portainer/api/dataservices/extension"
 	"github.com/portainer/portainer/api/dataservices/fdoprofile"
-	"github.com/portainer/portainer/api/dataservices/key"
 	"github.com/portainer/portainer/api/dataservices/registry"
 	"github.com/portainer/portainer/api/dataservices/resourcecontrol"
 	"github.com/portainer/portainer/api/dataservices/role"
@@ -46,7 +45,6 @@ type (
 		fileService             portainer.FileService
 		authorizationService    *authorization.Service
 		dockerhubService        *dockerhub.Service
-		keyService              *key.Service
 	}
 
 	// MigratorParameters represents the required parameters to create a new Migrator instance.
@@ -71,7 +69,6 @@ type (
 		FileService             portainer.FileService
 		AuthorizationService    *authorization.Service
 		DockerhubService        *dockerhub.Service
-		KeyService              *key.Service
 	}
 )
 
@@ -98,7 +95,6 @@ func NewMigrator(parameters *MigratorParameters) *Migrator {
 		fileService:             parameters.FileService,
 		authorizationService:    parameters.AuthorizationService,
 		dockerhubService:        parameters.DockerhubService,
-		keyService:              parameters.KeyService,
 	}
 }
 

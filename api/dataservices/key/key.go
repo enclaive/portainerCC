@@ -1,6 +1,10 @@
 package key
 
 import (
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+
 	portainer "github.com/portainer/portainer/api"
 )
 
@@ -28,19 +32,7 @@ func NewService(connection portainer.Connection) (*Service, error) {
 	}, nil
 }
 
-func (service *Service) Create(keyObject *portainer.Key, data string) error {
-
-	//only generate if not set
-	// if keyObject.Key == nil {
-	// 	// generate new rsa key
-	// 	privatekey, err := GenerateMultiPrimeKeyForSGX(rand.Reader, 2, 3072)
-	// 	if err != nil {
-	// 		fmt.Fprintf(os.Stderr, "Cannot generate RSA key\n")
-	// 		return errors.New("Could not generate Key")
-	// 	}
-
-	// 	keyObject.Key = privatekey
-	// }
+func (service *Service) Create(keyObject *portainer.Key) error {
 
 	return service.connection.CreateObject(
 		BucketName,
@@ -49,4 +41,37 @@ func (service *Service) Create(keyObject *portainer.Key, data string) error {
 			return int(id), keyObject
 		},
 	)
+}
+
+func (service *Service) Key(ID portainer.KeyID) (*portainer.Key, error) {
+	var key portainer.Key
+	identifier := service.connection.ConvertToKey(int(ID))
+
+	err := service.connection.GetObject(BucketName, identifier, &key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &key, nil
+}
+
+func (service *Service) Keys() ([]portainer.Key, error) {
+	var keys = make([]portainer.Key, 0)
+
+	err := service.connection.GetAll(
+		BucketName,
+		&portainer.Key{},
+		func(obj interface{}) (interface{}, error) {
+			key, ok := obj.(*portainer.Key)
+			if !ok {
+				log.Debug().Str("obj", fmt.Sprintf("%#v", obj)).Msg("failed to convert to Key object")
+				return nil, fmt.Errorf("Failed to convert to Key object: %s", obj)
+			}
+
+			keys = append(keys, *key)
+
+			return &portainer.Key{}, nil
+		})
+
+	return keys, err
 }

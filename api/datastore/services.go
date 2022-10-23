@@ -380,6 +380,10 @@ func (store *Store) Webhook() dataservices.WebhookService {
 	return store.WebhookService
 }
 
+func (store *Store) Key() dataservices.KeyService {
+	return store.KeyService
+}
+
 type storeExport struct {
 	CustomTemplate     []portainer.CustomTemplate     `json:"customtemplates,omitempty"`
 	EdgeGroup          []portainer.EdgeGroup          `json:"edgegroups,omitempty"`

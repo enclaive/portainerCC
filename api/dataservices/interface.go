@@ -323,8 +323,9 @@ type (
 	}
 
 	KeyService interface {
+		Key(ID portainer.KeyID) (*portainer.Key, error)
 		Keys() ([]portainer.Key, error)
-		Create(keyObject *portainer.Key, data string)
+		Create(keyObject *portainer.Key) error
 	}
 )
 
