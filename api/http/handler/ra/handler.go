@@ -40,6 +40,8 @@ func NewHandler(bouncer requestBouncer, dockerClientFactory *docker.ClientFactor
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorBuild))).Methods(http.MethodPost)
 	h.Handle("/ra/coordinator/list",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorList))).Methods(http.MethodGet)
+	h.Handle("/ra/coordinator/verify",
+		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorVerify))).Methods(http.MethodGet)
 	h.Handle("/ra/coordinator/{id}",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorGet))).Methods(http.MethodGet)
 	h.Handle("/ra/coordinator/{id}",
