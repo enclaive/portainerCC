@@ -137,6 +137,8 @@ type (
 		Name         string        `json:"name"`
 		ImageID      string        `json:"imageId"`
 		SigningKeyID int           `json:"signingKeyId"`
+		UniqueID     string        `json:"uniqueId"`
+		SignerID     string        `json:"signerId"`
 	}
 
 	CoordinatorID int

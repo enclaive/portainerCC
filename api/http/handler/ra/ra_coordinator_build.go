@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -87,7 +88,10 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		Dockerfile: "./dockerfile/Dockerfile.coordinator",
 		Tags:       []string{"coordinator/" + params.Name},
 		BuildArgs:  map[string]*string{"signingkey": &signingKey},
-		Outputs:    []types.ImageBuildOutput{},
+		Outputs: []types.ImageBuildOutput{
+			{Type: "local"},
+		},
+		NoCache: true,
 	}
 
 	// send image build request
@@ -96,22 +100,47 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		return httperror.InternalServerError("Unable to build Coordinator image", err)
 	}
 	defer res.Body.Close()
-	err = print(res.Body)
+
+	coordinatorObject := &portainer.Coordinator{
+		Name:         params.Name,
+		SigningKeyID: params.SigningKeyId,
+	}
+
+	// extract UniqueID and SignerID from Build Logs
+	scanner := bufio.NewScanner(res.Body)
+	var lastLine string
+	for scanner.Scan() {
+		lastLine = scanner.Text()
+		if strings.Contains(lastLine, "UniqueID") {
+			split := strings.Split(lastLine, ",")
+			for _, line := range split {
+				fmt.Println(line)
+				if strings.Contains(line, "UniqueID") {
+					uniqueID := strings.Split(line, ":")[1]
+					uniqueID = strings.ReplaceAll(uniqueID, `\"`, "")
+					uniqueID = strings.ReplaceAll(uniqueID, ` `, "")
+					coordinatorObject.UniqueID = uniqueID
+				}
+				if strings.Contains(line, "SignerID") {
+					signerID := strings.Split(line, ":")[1]
+					signerID = strings.ReplaceAll(signerID, `\"`, "")
+					signerID = strings.ReplaceAll(signerID, ` `, "")
+					coordinatorObject.SignerID = signerID
+				}
+			}
+		}
+	}
+	fmt.Println(coordinatorObject.SignerID)
+	fmt.Println(coordinatorObject.UniqueID)
 
 	// get image id of built image
 	imgMeta, _, err := client.ImageInspectWithRaw(r.Context(), "coordinator/"+params.Name)
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve new coordinators image id", err)
 	}
-
-	// TODO extract MRENCLAVE and MRSIGNER
+	coordinatorObject.ImageID = strings.Split(imgMeta.ID, ":")[1]
 
 	// create new coordinator in database
-	coordinatorObject := &portainer.Coordinator{
-		Name:         params.Name,
-		SigningKeyID: params.SigningKeyId,
-		ImageID:      strings.Split(imgMeta.ID, ":")[1],
-	}
 	err = handler.DataStore.Coordinator().Create(coordinatorObject)
 	if err != nil {
 		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to generate new coordinator", err}
