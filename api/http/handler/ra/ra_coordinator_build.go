@@ -3,8 +3,6 @@ package ra
 import (
 	"bufio"
 	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
@@ -62,9 +60,13 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		log.Fatal().Msg(err.Error())
 	}
 
-	//:TODO read signing key from db and convert it to pem format
-	key, err := rsa.GenerateKey(rand.Reader, 3072)
-	keyBytes := x509.MarshalPKCS1PrivateKey(key)
+	// read signing key from db and convert it to pem format
+	key, err := handler.DataStore.Key().Key(portainer.KeyID(params.SigningKeyId))
+	if err != nil {
+		return httperror.InternalServerError("could not fetch signing key from db", err)
+	}
+
+	keyBytes := x509.MarshalPKCS1PrivateKey(key.SigningKey)
 	keyPEM :=
 		&pem.Block{
 			Type:  "RSA PRIVATE KEY",
@@ -130,8 +132,6 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 			}
 		}
 	}
-	fmt.Println(coordinatorObject.SignerID)
-	fmt.Println(coordinatorObject.UniqueID)
 
 	// get image id of built image
 	imgMeta, _, err := client.ImageInspectWithRaw(r.Context(), "coordinator/"+params.Name)
