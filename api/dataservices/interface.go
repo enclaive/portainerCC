@@ -50,6 +50,7 @@ type (
 		User() UserService
 		Version() VersionService
 		Webhook() WebhookService
+		Key() KeyService
 	}
 
 	// CoordinatorService for managing coordinators
@@ -329,6 +330,12 @@ type (
 		WebhookByToken(token string) (*portainer.Webhook, error)
 		DeleteWebhook(ID portainer.WebhookID) error
 		BucketName() string
+	}
+
+	KeyService interface {
+		Key(ID portainer.KeyID) (*portainer.Key, error)
+		Keys() ([]portainer.Key, error)
+		Create(keyObject *portainer.Key) error
 	}
 )
 

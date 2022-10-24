@@ -2,6 +2,7 @@ package portainer
 
 import (
 	"context"
+	"crypto/rsa"
 	"io"
 	"time"
 
@@ -13,6 +14,30 @@ import (
 )
 
 type (
+
+	// portainerCC
+
+	KeyID int
+
+	Key struct {
+		ID                 KeyID              `json:"Id"`
+		KeyType            string             `json:"KeyType"`
+		Description        string             `json:"Description"`
+		PFKey              string             `json:"PFKey,omitempty"`
+		SigningKey         *rsa.PrivateKey    `json:"SigningKey,omitempty"`
+		TeamAccessPolicies TeamAccessPolicies `json:"TeamAccessPolicies"`
+	}
+
+	SignedImageID int
+
+	SignedImage struct {
+		ID        SignedImageID `json:"Id"`
+		Timestamp time.Time     `json:"CreatedAt"`
+		ImageId   string        `json:"ImageId"`
+		MRSIGNER  string        `json:"MRSIGNER"`
+		MRENCLAVE string        `json:"MRENCLAVE"`
+	}
+
 	// AccessPolicy represent a policy that can be associated to a user or team
 	AccessPolicy struct {
 		// Role identifier. Reference the role that will be associated to this access policy

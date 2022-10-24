@@ -36,6 +36,7 @@ import (
 	kubehandler "github.com/portainer/portainer/api/http/handler/kubernetes"
 	"github.com/portainer/portainer/api/http/handler/ldap"
 	"github.com/portainer/portainer/api/http/handler/motd"
+	"github.com/portainer/portainer/api/http/handler/portainercc"
 	"github.com/portainer/portainer/api/http/handler/ra"
 	"github.com/portainer/portainer/api/http/handler/registries"
 	"github.com/portainer/portainer/api/http/handler/resourcecontrols"
@@ -280,6 +281,8 @@ func (server *Server) Start() error {
 	webhookHandler.DataStore = server.DataStore
 	webhookHandler.DockerClientFactory = server.DockerClientFactory
 
+	var portainerccHandler = portainercc.NewHandler(requestBouncer, server.DataStore)
+
 	server.Handler = &handler.Handler{
 		RoleHandler:               roleHandler,
 		AuthHandler:               authHandler,
@@ -319,6 +322,7 @@ func (server *Server) Start() error {
 		UserHandler:               userHandler,
 		WebSocketHandler:          websocketHandler,
 		WebhookHandler:            webhookHandler,
+		PortainerCCHandler:        portainerccHandler,
 	}
 
 	handler := adminMonitor.WithRedirect(offlineGate.WaitingMiddleware(time.Minute, server.Handler))
