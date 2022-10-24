@@ -13,8 +13,6 @@ import (
 	"sync"
 
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/libhttp/request"
-	"github.com/portainer/libhttp/response"
 	portainer "github.com/portainer/portainer/api"
 )
 
@@ -29,12 +27,7 @@ type UpdateKeyParams struct {
 	TeamAccessPolicies portainer.TeamAccessPolicies
 }
 
-type ExportKey struct {
-	Id   int
-	Data string
-}
-
-func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+func (handler *Handler) create(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	var params KeyParams
 	err := json.NewDecoder(r.Body).Decode(&params)
 
@@ -63,7 +56,7 @@ func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request)
 			}
 
 			keyObject.SigningKey = privKey
-		} else if keyObject.KeyType == "FILE_ENC_KEY" {
+		} else if keyObject.KeyType == "FILE_ENC" {
 			//gramine pf file key
 		} else {
 			return httperror.InternalServerError("invalid key type", nil)
@@ -79,32 +72,6 @@ func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request)
 	log.Print(params.Data != "")
 
 	return httperror.BadRequest("invalid body content", nil)
-}
-
-func (handler *Handler) exportKey(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
-	id, err := request.RetrieveNumericRouteVariableValue(r, "id")
-	if err != nil {
-		return httperror.BadRequest("invalid query parameter", err)
-	}
-
-	key, err := handler.DataStore.Key().Key(portainer.KeyID(id))
-	if handler.DataStore.IsErrObjectNotFound(err) {
-		return httperror.NotFound("Unable to find a key with the specified identifier inside the database", err)
-	} else if err != nil {
-		return httperror.InternalServerError("error retrieving key from database", err)
-	}
-
-	return response.JSON(w, key)
-}
-
-func (handler *Handler) getKeys(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
-	keys, err := handler.DataStore.Key().Keys()
-
-	if err != nil {
-		return httperror.InternalServerError("couldn retrive keys from db", err)
-	}
-
-	return response.JSON(w, keys)
 }
 
 ///// fixed public exponent of 3 for sgx signing key
