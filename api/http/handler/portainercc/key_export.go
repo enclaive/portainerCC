@@ -18,7 +18,7 @@ type ExportKey struct {
 	Export      string
 }
 
-func (handler *Handler) export(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+func (handler *Handler) exportKey(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	id, err := request.RetrieveNumericRouteVariableValue(r, "id")
 	if err != nil {
 		return httperror.BadRequest("invalid query parameter", err)

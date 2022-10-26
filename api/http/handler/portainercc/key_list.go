@@ -15,7 +15,7 @@ type ExportListKey struct {
 	TeamAccessPolicies portainer.TeamAccessPolicies
 }
 
-func (handler *Handler) listByType(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+func (handler *Handler) listKeysByType(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 
 	keyType, err := request.RetrieveQueryParameter(r, "type", false)
 	if err != nil {

@@ -26,9 +26,11 @@ func NewHandler(bouncer *security.RequestBouncer, dataStore dataservices.DataSto
 	restrictedRouter := h.NewRoute().Subrouter()
 	restrictedRouter.Use(bouncer.RestrictedAccess)
 
-	restrictedRouter.Handle("/portainercc/keys", httperror.LoggerHandler(h.listByType)).Methods(http.MethodGet)
-	restrictedRouter.Handle("/portainercc/keys", httperror.LoggerHandler(h.create)).Methods(http.MethodPost)
-	restrictedRouter.Handle("/portainercc/keys/{id}", httperror.LoggerHandler(h.export)).Methods(http.MethodGet)
+	restrictedRouter.Handle("/portainercc/keys", httperror.LoggerHandler(h.listKeysByType)).Methods(http.MethodGet)
+	restrictedRouter.Handle("/portainercc/keys", httperror.LoggerHandler(h.createKey)).Methods(http.MethodPost)
+	restrictedRouter.Handle("/portainercc/keys/{id}", httperror.LoggerHandler(h.exportKey)).Methods(http.MethodGet)
+	restrictedRouter.Handle("/portainercc/keys/{id}", httperror.LoggerHandler(h.updateKey)).Methods(http.MethodPost)
+	restrictedRouter.Handle("/portainercc/keys/{id}", httperror.LoggerHandler(h.deleteKey)).Methods(http.MethodDelete)
 
 	return h
 }

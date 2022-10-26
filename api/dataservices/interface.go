@@ -326,6 +326,8 @@ type (
 		Key(ID portainer.KeyID) (*portainer.Key, error)
 		Keys() ([]portainer.Key, error)
 		Create(keyObject *portainer.Key) error
+		Update(ID portainer.KeyID, keyObject *portainer.Key) error
+		Delete(ID portainer.KeyID) error
 	}
 )
 
