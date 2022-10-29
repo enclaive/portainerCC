@@ -50,6 +50,7 @@ type (
 		Version() VersionService
 		Webhook() WebhookService
 		Key() KeyService
+		SecureImage() SecureImageService
 	}
 
 	// CustomTemplateService represents a service to manage custom templates
@@ -328,6 +329,12 @@ type (
 		Create(keyObject *portainer.Key) error
 		Update(ID portainer.KeyID, keyObject *portainer.Key) error
 		Delete(ID portainer.KeyID) error
+		BucketName() string
+	}
+
+	SecureImageService interface {
+		SecureImages() ([]portainer.SecureImage, error)
+		BucketName() string
 	}
 )
 
