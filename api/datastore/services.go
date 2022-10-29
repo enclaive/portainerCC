@@ -21,6 +21,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices/extension"
 	"github.com/portainer/portainer/api/dataservices/fdoprofile"
 	"github.com/portainer/portainer/api/dataservices/helmuserrepository"
+	"github.com/portainer/portainer/api/dataservices/key"
 	"github.com/portainer/portainer/api/dataservices/registry"
 	"github.com/portainer/portainer/api/dataservices/resourcecontrol"
 	"github.com/portainer/portainer/api/dataservices/role"
@@ -74,6 +75,7 @@ type Store struct {
 	UserService               *user.Service
 	VersionService            *version.Service
 	WebhookService            *webhook.Service
+	KeyService                *key.Service
 }
 
 func (store *Store) initServices() error {
@@ -245,6 +247,12 @@ func (store *Store) initServices() error {
 	}
 	store.ScheduleService = scheduleService
 
+	keyService, err := key.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.KeyService = keyService
+
 	return nil
 }
 
@@ -370,6 +378,10 @@ func (store *Store) Version() dataservices.VersionService {
 // Webhook gives access to the Webhook data management layer
 func (store *Store) Webhook() dataservices.WebhookService {
 	return store.WebhookService
+}
+
+func (store *Store) Key() dataservices.KeyService {
+	return store.KeyService
 }
 
 type storeExport struct {
