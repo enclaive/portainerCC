@@ -26,6 +26,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices/resourcecontrol"
 	"github.com/portainer/portainer/api/dataservices/role"
 	"github.com/portainer/portainer/api/dataservices/schedule"
+	"github.com/portainer/portainer/api/dataservices/secureimage"
 	"github.com/portainer/portainer/api/dataservices/settings"
 	"github.com/portainer/portainer/api/dataservices/snapshot"
 	"github.com/portainer/portainer/api/dataservices/ssl"
@@ -76,6 +77,7 @@ type Store struct {
 	VersionService            *version.Service
 	WebhookService            *webhook.Service
 	KeyService                *key.Service
+	SecureImageService        *secureimage.Service
 }
 
 func (store *Store) initServices() error {
@@ -253,6 +255,12 @@ func (store *Store) initServices() error {
 	}
 	store.KeyService = keyService
 
+	secureImageService, err := secureimage.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.SecureImageService = secureImageService
+
 	return nil
 }
 
@@ -382,6 +390,10 @@ func (store *Store) Webhook() dataservices.WebhookService {
 
 func (store *Store) Key() dataservices.KeyService {
 	return store.KeyService
+}
+
+func (store *Store) SecureImage() dataservices.SecureImageService {
+	return store.SecureImageService
 }
 
 type storeExport struct {
