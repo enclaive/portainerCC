@@ -133,12 +133,12 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
           >
             <SidebarItem
               to="portainer.keymanagement"
-              params={{ type: 'signing' }}
+              params={{ type: 'SIGNING' }}
               label="SGX Signing Keys"
             />
             <SidebarItem
               to="portainer.keymanagement"
-              params={{ type: 'pf' }}
+              params={{ type: 'FILE_ENC' }}
               label="Gramine Protected Files Keys"
             />
             <SidebarItem

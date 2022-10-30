@@ -17,9 +17,9 @@ interface Props {
 
 export function CreateKeyForm({ keytype, teams }: Props) {
     let title = ""
-    if (keytype == "signing") {
+    if (keytype == "SIGNING") {
         title = "Create or import a SGX signing key"
-    } else if (keytype == "pf") {
+    } else if (keytype == "FILE_ENC") {
         title = "Create or import a gramine proteced files key"
     } else {
         throw Error("invalid key type")
