@@ -132,6 +132,10 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
             openOnPaths={['portainer']}
           >
             <SidebarItem
+              to="portainer.coordinator-build"
+              label="Coordinator Image"
+            />
+            <SidebarItem
               to="portainer.keymanagement"
               params={{ type: 'SIGNING' }}
               label="SGX Signing Keys"
@@ -139,7 +143,7 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
             <SidebarItem
               to="portainer.keymanagement"
               params={{ type: 'FILE_ENC' }}
-              label="Gramine Protected Files Keys"
+              label="File Encryption Keys"
             />
             <SidebarItem
               to="portainer.raList"

@@ -1,7 +1,9 @@
 import angular from 'angular';
 import { StateRegistry } from '@uirouter/angularjs';
 
-import { ListView } from '@/react/portainer/portainercc/keymanagement';
+import { KeyListView } from '@/react/portainer/portainercc/keymanagement';
+import { CoordinatorImagesListView } from '@/react/portainer/portainercc/coordinator';
+
 import { r2a } from '@/react-tools/react2angular';
 import { withCurrentUser } from '@/react-tools/withCurrentUser';
 import { withReactQuery } from '@/react-tools/withReactQuery';
@@ -12,11 +14,14 @@ export const portainerCCModule = angular
   .config(config)
   .component(
     'raList',
-    r2a(withUIRouter(withReactQuery(withCurrentUser(ListView))), [])
+    r2a(withUIRouter(withReactQuery(withCurrentUser(KeyListView))), [])
   )
   .component(
     'keymanagement',
-    r2a(withUIRouter(withReactQuery(withCurrentUser(ListView))), [])
+    r2a(withUIRouter(withReactQuery(withCurrentUser(KeyListView))), [])
+  ).component(
+    'coordinatorBuild',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(CoordinatorImagesListView))), [])
   ).name;
 
 /* @ngInject */
@@ -37,6 +42,16 @@ function config($stateRegistryProvider: StateRegistry) {
     views: {
       'content@': {
         component: 'raList',
+      },
+    },
+  });
+
+  $stateRegistryProvider.register({
+    name: 'portainer.coordinator-build',
+    url: '/coordinator',
+    views: {
+      'content@': {
+        component: 'coordinatorBuild',
       },
     },
   });

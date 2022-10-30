@@ -16,7 +16,7 @@ import { useKeys } from '../queries';
 const storageKey = 'portainercc-keys';
 const useStore = createStore(storageKey);
 
-export function ListView() {
+export function KeyListView() {
     const { isAdmin } = useUser();
 
     const store = useStore();
