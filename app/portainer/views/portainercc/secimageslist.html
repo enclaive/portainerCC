@@ -1,0 +1,25 @@
+<rd-header>
+    <rd-header-title title-text="Remote Attestation">
+        <!-- <a data-toggle="tooltip" title="Refresh" ui-sref="portainer.confidential-computing"
+            ui-sref-opts="{reload: true}">
+            <i class="fa fa-sync" aria-hidden="true"></i>
+        </a> -->
+    </rd-header-title>
+    <rd-header-content>Image Identifiers</rd-header-content>
+</rd-header>
+
+<information-panel title-text="Information">
+    <span class="small text-muted">
+        Watch all your gramine empowerd images
+    </span>
+</information-panel>
+<!-- <span>
+    <button ng-click="$ctrl.testFunc()">test</button>
+    <br />
+</span> -->
+<div class="row">
+    <div class="col-sm-12">
+        <ra-datatable title-text="RA" title-icon="fa-key" dataset="imageIdentifiers"
+            table-key="raIdentifiers" order-by="image"></ra-datatable>
+    </div>
+</div>

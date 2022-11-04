@@ -1,0 +1,27 @@
+<rd-header>
+    <rd-header-title title-text="{{keyTitle}}">
+        <!-- <a data-toggle="tooltip" title="Refresh" ui-sref="portainer.confidential-computing"
+            ui-sref-opts="{reload: true}">
+            <i class="fa fa-sync" aria-hidden="true"></i>
+        </a> -->
+    </rd-header-title>
+    <rd-header-content>{{keySubtitle}}</rd-header-content>
+</rd-header>
+
+<information-panel title-text="Information">
+    <span class="small text-muted">
+        Generate or import your {{keyTitle}} Keys.<br />
+        You can manage their access by adding teams and allowing them to use the key in the image building process.
+    </span>
+</information-panel>
+<!-- <span>
+    <button ng-click="$ctrl.testFunc()">test</button>
+    <br />
+</span> -->
+<div class="row">
+    <div class="col-sm-12">
+        <keys-datatable title-text="{{keyTitle}} Keys" title-icon="fa-key" dataset="keys"
+            table-key="enclaveKeys" order-by="description" teams="teams" multi-close="$ctrl.updateKeyAccess" multi-open="$ctrl.saveTempSelection"
+            remove-action="$ctrl.removeKey" export-action="$ctrl.exportKey" import-action="$ctrl.importKey" create-action="$ctrl.generateKey" new-key="formData"></keys-datatable>
+    </div>
+</div>

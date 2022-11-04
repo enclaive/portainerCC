@@ -418,6 +418,27 @@ angular
         },
       };
 
+      // portainerCC 
+      var portainerccKeymanagement = {
+        name: 'portainer.keymanagement',
+        url: '/keys?type',
+        views: {
+          'content@':{
+            component: 'keylistView'
+          }
+        }
+      }
+
+      var portainerccSignedImages = {
+        name: 'portainer.signed-images',
+        url: '/signed-images',
+        views: {
+          'content@':{
+            component: 'secImagesView'
+          }
+        }
+      }
+
       $stateRegistryProvider.register(root);
       $stateRegistryProvider.register(endpointRoot);
       $stateRegistryProvider.register(portainer);
@@ -449,6 +470,8 @@ angular
       $stateRegistryProvider.register(tags);
       $stateRegistryProvider.register(users);
       $stateRegistryProvider.register(user);
+      $stateRegistryProvider.register(portainerccKeymanagement);
+      $stateRegistryProvider.register(portainerccSignedImages);
     },
   ]);
 
