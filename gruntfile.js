@@ -180,7 +180,7 @@ function shell_run_container() {
       -v /var/run/docker.sock:/var/run/alternative.sock:z \
       -v /tmp:/tmp \
       --name portainer \
-      notifierman/gramine-os:latest \
+      sgxdcaprastuff/gramine-os:latest \
       /app/portainer ${portainerFlags}
   `;
 }

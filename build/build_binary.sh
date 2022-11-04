@@ -17,7 +17,7 @@ cd api
 go get -t -d -v ./...
 
 # the build takes 2 seconds
-GOOS=$1 GOARCH=$2 CGO_ENABLED=0 go build \
+GOOS=$1 GOARCH=$2 CGO_ENABLED=0 CGO_CFLAGS=-I/snap/ego-dev/current/opt/ego/include CGO_LDFLAGS=-L/snap/ego-dev/current/opt/ego/lib ego-go build \
 	--installsuffix cgo \
 	--gcflags="-trimpath $(pwd)" \
 	--ldflags "-s \

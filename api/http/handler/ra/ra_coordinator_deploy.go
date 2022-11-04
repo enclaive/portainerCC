@@ -1,8 +1,10 @@
 package ra
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -48,21 +50,6 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	// create local docker API client
-	localClient, err := handler.dockerClientFactory.CreateClient(&localEndpoint, "", nil)
-	if err != nil {
-		return httperror.InternalServerError("could not create local docker client", err)
-	}
-
-	// get requested coordinator image
-	image, err := localClient.ImageSave(r.Context(), []string{coordinator.ImageID})
-	if err != nil {
-		return httperror.InternalServerError("could not export coordinator image", err)
-	}
-	defer image.Close()
-
-	localClient.Close()
-
 	// get target environment
 	targetEndpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(params.EnvironmentID))
 	log.Info().Msg(targetEndpoint.Name)
@@ -76,11 +63,28 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 		return httperror.InternalServerError("unable to create docker client", err)
 	}
 
-	// create coordinator image on target environment
-	_, err = targetClient.ImageLoad(r.Context(), image, false)
+	ping, err := targetClient.Ping(r.Context())
 	if err != nil {
-		return httperror.InternalServerError("Unable to build Coordinator image", err)
+		return httperror.InternalServerError("Could not ping docker env", err)
 	}
+	log.Info().Msg(ping.APIVersion)
+
+	// pull coordinator image
+	authConfig := types.AuthConfig{
+		Username:      "sgxdcaprastuff",
+		Password:      "dckr_pat_ASB6_d6hVfhgHsNXByxEWYjfXtc",
+		ServerAddress: "https://index.docker.io/v2/",
+	}
+	authConfigBytes, _ := json.Marshal(authConfig)
+	authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
+	pullOptions := types.ImagePullOptions{RegistryAuth: authConfigEncoded}
+
+	pullRes, err := targetClient.ImagePull(r.Context(), "sgxdcaprastuff/coordinatortest", pullOptions)
+	if err != nil {
+		return httperror.InternalServerError("could not pull coordinator image to registry", err)
+	}
+	defer pullRes.Close()
+	print(pullRes)
 
 	port1, err := nat.NewPort("tcp", "9944")
 	port2, err := nat.NewPort("tcp", "4433")
@@ -88,7 +92,7 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	// run coordinator image on target environment
 	createdBody, err := targetClient.ContainerCreate(r.Context(),
 		&container.Config{
-			Image: "coordinator/" + coordinator.Name,
+			Image: "sgxdcaprastuff/coordinatortest",
 			ExposedPorts: nat.PortSet{
 				port1: struct{}{},
 				port2: struct{}{},
@@ -96,9 +100,9 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 			Env: []string{
 				"OE_SIMULATION=0",
 				"OE_LOG_LEVEL=INFO",
-				"EDG_COORDINATOR_MESH_ADDR=coordinator:2001",
-				"EDG_COORDINATOR_CLIENT_ADDR=coordinator:4433",
-				"EDG_COORDINATOR_DNS_NAMES=coordinator",
+				"EDG_COORDINATOR_MESH_ADDR=" + coordinator.Name + ":2001",
+				"EDG_COORDINATOR_CLIENT_ADDR=" + coordinator.Name + ":4433",
+				"EDG_COORDINATOR_DNS_NAMES=" + coordinator.Name,
 				"EDG_COORDINATOR_PROMETHEUS_ADDR=0.0.0.0:9944",
 			},
 			Domainname: "coordinator",
@@ -153,7 +157,15 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	networkResource, err := targetClient.NetworkInspect(r.Context(), "coordinator", types.NetworkInspectOptions{})
 	if err != nil {
 		// create coordinator network
-		createNetworkResponse, err := targetClient.NetworkCreate(r.Context(), "coordinator", types.NetworkCreate{})
+		createNetworkResponse, err := targetClient.NetworkCreate(r.Context(), "coordinator", types.NetworkCreate{
+			IPAM: &network.IPAM{
+				Config: []network.IPAMConfig{
+					{
+						Subnet: "172.20.0.0/16",
+					},
+				},
+			},
+		})
 		if err != nil {
 			return httperror.InternalServerError("could not create coordinator network", err)
 		}
@@ -163,7 +175,11 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	}
 
 	// connect container to coordinator network
-	err = targetClient.NetworkConnect(r.Context(), networkID, createdBody.ID, &network.EndpointSettings{})
+	err = targetClient.NetworkConnect(r.Context(), networkID, createdBody.ID, &network.EndpointSettings{
+		IPAMConfig: &network.EndpointIPAMConfig{
+			IPv4Address: "172.20.0.20",
+		},
+	})
 	if err != nil {
 		return httperror.InternalServerError("could not connect container to coordinator network", err)
 	}
@@ -171,6 +187,39 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	// start coordinator container
 	_ = targetClient.ContainerStart(r.Context(), createdBody.ID, types.ContainerStartOptions{})
 
+	// remove coordinator from bridge network to fix SSL_ERROR_SYSCALL error
+	err = targetClient.NetworkDisconnect(r.Context(), "bridge", createdBody.ID, false)
+	if err != nil {
+		return httperror.InternalServerError("could not remove coordinator container from bridge network", err)
+	}
+
 	targetClient.Close()
+	log.Info().Msg("CoordinatorID: " + strconv.FormatInt(int64(params.CoordinatorID), 10))
+	log.Info().Msg("EnvironmentID: " + strconv.FormatInt(int64(params.EnvironmentID), 10))
+
+	coordinatorDeployment := portainer.CoordinatorDeployment{
+		CoordinatorID: params.CoordinatorID,
+		EndpointID:    params.EnvironmentID,
+		Verified:      false,
+	}
+
+	log.Info().Msg("CoordinatorID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.CoordinatorID), 10))
+	log.Info().Msg("EnvironmentID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.EndpointID), 10))
+
+	deployments, err := handler.DataStore.CoordinatorDeployment().CoordinatorDeployments()
+	for _, deployment := range deployments {
+		if deployment.EndpointID == params.EnvironmentID {
+			err := handler.DataStore.CoordinatorDeployment().Delete(deployment.ID)
+			if err != nil {
+				return httperror.InternalServerError("could not delete old deployment", err)
+			}
+		}
+	}
+
+	err = handler.DataStore.CoordinatorDeployment().Create(&coordinatorDeployment)
+	if err != nil {
+		return httperror.InternalServerError("could not create coordinatorDeployment in db", err)
+	}
+
 	return response.JSON(w, portainer.StatusOk)
 }

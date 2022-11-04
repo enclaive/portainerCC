@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -55,11 +55,6 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		// panic(err)
 	}
 
-	fileContent, err := ioutil.ReadFile("/coordinator/build/private.pem")
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-	}
-
 	// read signing key from db and convert it to pem format
 	key, err := handler.DataStore.Key().Key(portainer.KeyID(params.SigningKeyId))
 	if err != nil {
@@ -76,8 +71,8 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 	var PrivateKeyRow bytes.Buffer
 	err = pem.Encode(&PrivateKeyRow, keyPEM)
 
-	// signingKey := PrivateKeyRow.String()
-	signingKey := string(fileContent)
+	signingKey := PrivateKeyRow.String()
+	// signingKey := string(fileContent)
 
 	// archive coordinator source code
 	tar, err := archive.Tar("/coordinator", archive.Gzip)
@@ -88,7 +83,7 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 	// set build options for image build
 	opts := types.ImageBuildOptions{
 		Dockerfile: "./dockerfile/Dockerfile.coordinator",
-		Tags:       []string{"coordinator/" + params.Name},
+		Tags:       []string{"sgxdcaprastuff/coordinatortest"},
 		BuildArgs:  map[string]*string{"signingkey": &signingKey},
 		Outputs: []types.ImageBuildOutput{
 			{Type: "local"},
@@ -133,8 +128,25 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	//push image
+	authConfig := types.AuthConfig{
+		Username:      "sgxdcaprastuff",
+		Password:      "dckr_pat_ASB6_d6hVfhgHsNXByxEWYjfXtc",
+		ServerAddress: "https://index.docker.io/v2/",
+	}
+	authConfigBytes, _ := json.Marshal(authConfig)
+	authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
+	pushOptions := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
+
+	pushRes, err := client.ImagePush(r.Context(), "sgxdcaprastuff/coordinatortest", pushOptions)
+	if err != nil {
+		return httperror.InternalServerError("could not push coordinator image to registry", err)
+	}
+	defer pushRes.Close()
+	print(pushRes)
+
 	// get image id of built image
-	imgMeta, _, err := client.ImageInspectWithRaw(r.Context(), "coordinator/"+params.Name)
+	imgMeta, _, err := client.ImageInspectWithRaw(r.Context(), "sgxdcaprastuff/coordinatortest")
 	if err != nil {
 		return httperror.InternalServerError("Unable to retrieve new coordinators image id", err)
 	}

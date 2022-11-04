@@ -11,14 +11,15 @@ if (NOT CMAKE_BUILD_TYPE STREQUAL Debug)
 endif ()
 
 # Generate key
-# add_custom_command(
-#   OUTPUT private.pem public.pem
-#   COMMAND openssl genrsa -out private.pem -3 3072
-#   COMMAND openssl rsa -in private.pem -pubout -out public.pem)
+add_custom_command(
+  # OUTPUT private.pem public.pem
+  OUTPUT public.pem
+  # COMMAND openssl genrsa -out private.pem -3 3072
+  COMMAND openssl rsa -in private.pem -pubout -out public.pem)
 
-# add_custom_target(
-#   signing-key
-#   DEPENDS private.pem)
+add_custom_target(
+  signing-key
+  DEPENDS private.pem)
 
 #
 # Build coordinator
@@ -53,7 +54,7 @@ target_link_libraries(coordinator-enclave
 # Sign enclave
 add_custom_command(
   OUTPUT coordinator-enclave.signed
-  DEPENDS coordinator-enclave enclave/coordinator.conf 
+  DEPENDS coordinator-enclave enclave/coordinator.conf signing-key
   COMMAND openenclave::oesign sign -e $<TARGET_FILE:coordinator-enclave> -c
           ${CMAKE_SOURCE_DIR}/enclave/coordinator.conf -k private.pem)
 

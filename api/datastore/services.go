@@ -10,6 +10,7 @@ import (
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/dataservices/apikeyrepository"
 	"github.com/portainer/portainer/api/dataservices/coordinator"
+	coordoinatordeployment "github.com/portainer/portainer/api/dataservices/coordinatordeployment"
 	"github.com/portainer/portainer/api/dataservices/customtemplate"
 	"github.com/portainer/portainer/api/dataservices/dockerhub"
 	"github.com/portainer/portainer/api/dataservices/edgegroup"
@@ -47,37 +48,38 @@ import (
 type Store struct {
 	connection portainer.Connection
 
-	fileService               portainer.FileService
-	CoordinatorService        *coordinator.Service
-	CustomTemplateService     *customtemplate.Service
-	DockerHubService          *dockerhub.Service
-	EdgeGroupService          *edgegroup.Service
-	EdgeJobService            *edgejob.Service
-	EdgeUpdateScheduleService *edgeupdateschedule.Service
-	EdgeStackService          *edgestack.Service
-	EndpointGroupService      *endpointgroup.Service
-	EndpointService           *endpoint.Service
-	EndpointRelationService   *endpointrelation.Service
-	ExtensionService          *extension.Service
-	FDOProfilesService        *fdoprofile.Service
-	HelmUserRepositoryService *helmuserrepository.Service
-	RegistryService           *registry.Service
-	ResourceControlService    *resourcecontrol.Service
-	RoleService               *role.Service
-	APIKeyRepositoryService   *apikeyrepository.Service
-	ScheduleService           *schedule.Service
-	SettingsService           *settings.Service
-	SnapshotService           *snapshot.Service
-	SSLSettingsService        *ssl.Service
-	StackService              *stack.Service
-	TagService                *tag.Service
-	TeamMembershipService     *teammembership.Service
-	TeamService               *team.Service
-	TunnelServerService       *tunnelserver.Service
-	UserService               *user.Service
-	VersionService            *version.Service
-	WebhookService            *webhook.Service
-	KeyService                *key.Service
+	fileService                  portainer.FileService
+	CoordinatorService           *coordinator.Service
+	CoordinatorDeploymentService *coordoinatordeployment.Service
+	CustomTemplateService        *customtemplate.Service
+	DockerHubService             *dockerhub.Service
+	EdgeGroupService             *edgegroup.Service
+	EdgeJobService               *edgejob.Service
+	EdgeUpdateScheduleService    *edgeupdateschedule.Service
+	EdgeStackService             *edgestack.Service
+	EndpointGroupService         *endpointgroup.Service
+	EndpointService              *endpoint.Service
+	EndpointRelationService      *endpointrelation.Service
+	ExtensionService             *extension.Service
+	FDOProfilesService           *fdoprofile.Service
+	HelmUserRepositoryService    *helmuserrepository.Service
+	RegistryService              *registry.Service
+	ResourceControlService       *resourcecontrol.Service
+	RoleService                  *role.Service
+	APIKeyRepositoryService      *apikeyrepository.Service
+	ScheduleService              *schedule.Service
+	SettingsService              *settings.Service
+	SnapshotService              *snapshot.Service
+	SSLSettingsService           *ssl.Service
+	StackService                 *stack.Service
+	TagService                   *tag.Service
+	TeamMembershipService        *teammembership.Service
+	TeamService                  *team.Service
+	TunnelServerService          *tunnelserver.Service
+	UserService                  *user.Service
+	VersionService               *version.Service
+	WebhookService               *webhook.Service
+	KeyService                   *key.Service
 }
 
 func (store *Store) initServices() error {
@@ -92,6 +94,12 @@ func (store *Store) initServices() error {
 		return err
 	}
 	store.CoordinatorService = coordinatorService
+
+	coordinatorDeploymentService, err := coordoinatordeployment.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.CoordinatorDeploymentService = coordinatorDeploymentService
 
 	customTemplateService, err := customtemplate.NewService(store.connection)
 	if err != nil {
@@ -267,6 +275,10 @@ func (store *Store) initServices() error {
 // CoordinatorService gives access to the coordinator management layer
 func (store *Store) Coordinator() dataservices.CoordinatorService {
 	return store.CoordinatorService
+}
+
+func (store *Store) CoordinatorDeployment() dataservices.CoordinatorDeploymentService {
+	return store.CoordinatorDeploymentService
 }
 
 // CustomTemplate gives access to the CustomTemplate data management layer

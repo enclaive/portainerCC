@@ -70,7 +70,7 @@ func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	handler.DataStore.Key().Create(keyObject)
+	err = handler.DataStore.Key().Create(keyObject)
 
 	log.Print("AHA?")
 	log.Print(keyObject)
@@ -78,7 +78,7 @@ func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request)
 
 	log.Print(params.Data != "")
 
-	return httperror.BadRequest("invalid body content", nil)
+	return response.JSON(w, err)
 }
 
 func (handler *Handler) exportKey(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {

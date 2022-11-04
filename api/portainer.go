@@ -3,6 +3,7 @@ package portainer
 import (
 	"context"
 	"crypto/rsa"
+	"encoding/pem"
 	"io"
 	"time"
 
@@ -167,6 +168,16 @@ type (
 	}
 
 	CoordinatorID int
+
+	CoordinatorDeployment struct {
+		ID            CoordinatorDeploymentID `json:"id"`
+		CoordinatorID int                     `json:"coordinatorId"`
+		EndpointID    int                     `json:"endpointId"`
+		RootCert      pem.Block               `json:"rootCert"`
+		Verified      bool                    `json:"verified"`
+	}
+
+	CoordinatorDeploymentID int
 
 	// CustomTemplateVariableDefinition
 	CustomTemplateVariableDefinition struct {
