@@ -7,12 +7,19 @@ import { FormControl } from '@@/form-components/FormControl';
 import { Widget } from '@@/Widget';
 import { Input } from '@@/form-components/Input';
 import { LoadingButton } from '@@/buttons/LoadingButton';
-import { TeamsSelector } from '@@/TeamsSelector';
-import { Team } from '../../../../users/teams/types'
+import { KeyEntry } from '../../../keymanagement/types';
+import { KeySelector } from '@@/KeySelector';
 
+interface Props {
+    keys: KeyEntry[]
+}
 
-export function BuildCoordinatorForm() {
+export function BuildCoordinatorForm({
+    keys
+}: Props) {
     let title = "Build your coordinator image"
+
+    const [selectedKey, setSelectedKey] = useState<readonly number[]>([]);
 
 
     return (
@@ -27,7 +34,7 @@ export function BuildCoordinatorForm() {
                     />
                     <Widget.Body>
                         <Formik
-                            initialValues={[]}
+                            initialValues={{ name: '', key: null }}
                             onSubmit={(() => Promise.resolve(null))}
                             key={1}
                         >
@@ -60,6 +67,23 @@ export function BuildCoordinatorForm() {
                                         />
                                     </FormControl>
 
+
+                                    <FormControl
+                                        inputId="keys"
+                                        label="SGX Signign Key"
+                                        errors="err"
+                                        required
+                                    >
+
+
+                                        <KeySelector
+                                            value={selectedKey}
+                                            onChange={(keys) => setSelectedKey(keys)}
+                                            keys={keys}
+                                            placeholder="Select a key"
+                                        />
+
+                                    </FormControl>
 
 
                                     <div className="form-group">
