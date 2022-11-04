@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/client"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/crypto"
+	"github.com/rs/zerolog/log"
 )
 
 var errUnsupportedEnvironmentType = errors.New("Environment not supported")
@@ -38,6 +39,7 @@ func NewClientFactory(signatureService portainer.DigitalSignatureService, revers
 // with an agent enabled environment(endpoint) to target a specific node in an agent cluster.
 // The underlying http client timeout may be specified, a default value is used otherwise.
 func (factory *ClientFactory) CreateClient(endpoint *portainer.Endpoint, nodeName string, timeout *time.Duration) (*client.Client, error) {
+
 	if endpoint.Type == portainer.AzureEnvironment {
 		return nil, errUnsupportedEnvironmentType
 	} else if endpoint.Type == portainer.AgentOnDockerEnvironment {
@@ -73,6 +75,7 @@ func createTCPClient(endpoint *portainer.Endpoint, timeout *time.Duration) (*cli
 }
 
 func createEdgeClient(endpoint *portainer.Endpoint, signatureService portainer.DigitalSignatureService, reverseTunnelService portainer.ReverseTunnelService, nodeName string, timeout *time.Duration) (*client.Client, error) {
+	log.Info().Msg("creating edge client")
 	httpCli, err := httpClient(endpoint, timeout)
 	if err != nil {
 		return nil, err

@@ -76,6 +76,7 @@ func main() {
 
 	if containerPlatform == agent.PlatformDocker || containerPlatform == agent.PlatformPodman {
 		log.Info().Msg("agent running on Docker platform")
+		log.Info().Msg("Ich bin ein portainerCC agent")
 
 		dockerInfoService = docker.NewInfoService()
 

@@ -1,0 +1,5 @@
+.vscode
+build/
+*.pem
+*.test
+marblerun-coordinator-data/

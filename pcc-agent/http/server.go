@@ -94,7 +94,7 @@ func (server *APIServer) Start(edgeMode bool) error {
 		// Addr:         server.addr + ":" + server.port,
 		Addr:         server.addr + ":1337",
 		Handler:      httpHandler,
-		ReadTimeout:  120 * time.Second,
+		ReadTimeout:  1000 * time.Second,
 		WriteTimeout: 30 * time.Minute,
 	}
 
@@ -198,7 +198,7 @@ func handleConnection(clientConn net.Conn, server *APIServer) {
 	if clientHello.ServerName == "coordinator" {
 		// TODO hardcoded
 		log.Print("CONNECTION PROXY TO COORDINATOR")
-		target = "172.17.0.4:4444"
+		target = "172.20.0.20:4433"
 
 	} else {
 		log.Print("DEFAULT CONNECTION / SNI")
