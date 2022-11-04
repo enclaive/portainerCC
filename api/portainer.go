@@ -29,10 +29,10 @@ type (
 		TeamAccessPolicies TeamAccessPolicies `json:"TeamAccessPolicies"`
 	}
 
-	SignedImageID int
+	SecureImageID int
 
-	SignedImage struct {
-		ID        SignedImageID `json:"Id"`
+	SecureImage struct {
+		ID        SecureImageID `json:"Id"`
 		Timestamp time.Time     `json:"CreatedAt"`
 		ImageId   string        `json:"ImageId"`
 		MRSIGNER  string        `json:"MRSIGNER"`

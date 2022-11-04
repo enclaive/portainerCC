@@ -3,17 +3,21 @@ package portainercc
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"io"
-	"log"
+	"io/ioutil"
 	"math"
 	"math/big"
 	"net/http"
+	"os"
+	"os/exec"
 	"sync"
 
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
 	portainer "github.com/portainer/portainer/api"
 )
@@ -25,16 +29,14 @@ type KeyParams struct {
 	Data               string
 }
 
-type UpdateKeyParams struct {
+type KeyResponse struct {
+	Id                 portainer.KeyID
+	KeyType            string
+	Description        string
 	TeamAccessPolicies portainer.TeamAccessPolicies
 }
 
-type ExportKey struct {
-	Id   int
-	Data string
-}
-
-func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+func (handler *Handler) createKey(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	var params KeyParams
 	err := json.NewDecoder(r.Body).Decode(&params)
 
@@ -48,63 +50,76 @@ func (handler *Handler) generateOrImport(w http.ResponseWriter, r *http.Request)
 		TeamAccessPolicies: params.TeamAccessPolicies,
 	}
 
-	//handle key gen/import
-	if params.Data != "" {
-		//IMPORT data as key
-		//TODO
-		return httperror.InternalServerError("import not implemented", err)
-	} else {
-		//gen new key
-		if keyObject.KeyType == "SIGNING" {
-			//rsa signing key
-			privKey, err := GenerateMultiPrimeKeyE3(rand.Reader, 2, 3072)
-			if err != nil {
-				return httperror.InternalServerError("could not generate rsa key", nil)
+	//handle key type
+	if keyObject.KeyType == "SIGNING" {
+		if params.Data != "" {
+			//IMPORT data as key
+			block, _ := pem.Decode([]byte(params.Data))
+			if block == nil {
+				return httperror.InternalServerError("could not import rsa key, invalid pem", err)
+			}
+
+			privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+			if block == nil {
+				return httperror.InternalServerError("could not import rsa key", err)
 			}
 
 			keyObject.SigningKey = privKey
-		} else if keyObject.KeyType == "FILE_ENC_KEY" {
-			//gramine pf file key
 		} else {
-			return httperror.InternalServerError("invalid key type", nil)
+			//gen new key
+			privKey, err := GenerateMultiPrimeKeyE3(rand.Reader, 2, 3072)
+			if err != nil {
+				return httperror.InternalServerError("could not generate rsa key", err)
+			}
+
+			keyObject.SigningKey = privKey
 		}
+	} else if keyObject.KeyType == "FILE_ENC" {
+		//gramine pf file key
+		if params.Data != "" {
+			//IMPORT data as key - TODO maybe hex check/size
+			keyObject.PFKey = params.Data
+		} else {
+			//gen new key
+			tempKeyFile, err := ioutil.TempFile("", "super")
+			if err != nil {
+				return httperror.InternalServerError("could not generate file key", err)
+			}
+			defer os.Remove(tempKeyFile.Name())
+
+			//create key with sgx
+			cmd := exec.Command("gramine-sgx-pf-crypt", "gen-key", "-w", tempKeyFile.Name())
+			_, err = cmd.Output()
+			if err != nil {
+				return httperror.InternalServerError("could not generate file key", err)
+			}
+
+			//save hex
+			file, err := ioutil.ReadFile(tempKeyFile.Name())
+			if err != nil {
+				return httperror.InternalServerError("could not generate file key", err)
+			}
+
+			keyObject.PFKey = hex.EncodeToString(file)
+		}
+	} else {
+		return httperror.InternalServerError("invalid key type", err)
 	}
 
 	err = handler.DataStore.Key().Create(keyObject)
 
-	log.Print("AHA?")
-	log.Print(keyObject)
-	log.Printf("BODY: %s", params.Data)
-
-	log.Print(params.Data != "")
-
-	return response.JSON(w, err)
-}
-
-func (handler *Handler) exportKey(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
-	id, err := request.RetrieveNumericRouteVariableValue(r, "id")
 	if err != nil {
-		return httperror.BadRequest("invalid query parameter", err)
+		return httperror.InternalServerError("could save key in db", err)
 	}
 
-	key, err := handler.DataStore.Key().Key(portainer.KeyID(id))
-	if handler.DataStore.IsErrObjectNotFound(err) {
-		return httperror.NotFound("Unable to find a key with the specified identifier inside the database", err)
-	} else if err != nil {
-		return httperror.InternalServerError("error retrieving key from database", err)
+	res := KeyResponse{
+		Id:                 keyObject.ID,
+		KeyType:            keyObject.KeyType,
+		Description:        keyObject.Description,
+		TeamAccessPolicies: keyObject.TeamAccessPolicies,
 	}
 
-	return response.JSON(w, key)
-}
-
-func (handler *Handler) getKeys(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
-	keys, err := handler.DataStore.Key().Keys()
-
-	if err != nil {
-		return httperror.InternalServerError("couldn retrive keys from db", err)
-	}
-
-	return response.JSON(w, keys)
+	return response.JSON(w, res)
 }
 
 ///// fixed public exponent of 3 for sgx signing key

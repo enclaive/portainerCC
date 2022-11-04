@@ -75,3 +75,13 @@ func (service *Service) Keys() ([]portainer.Key, error) {
 
 	return keys, err
 }
+
+func (service *Service) Update(ID portainer.KeyID, keyObject *portainer.Key) error {
+	identifier := service.connection.ConvertToKey(int(ID))
+	return service.connection.UpdateObject(BucketName, identifier, keyObject)
+}
+
+func (service *Service) Delete(ID portainer.KeyID) error {
+	identifier := service.connection.ConvertToKey(int(ID))
+	return service.connection.DeleteObject(BucketName, identifier)
+}

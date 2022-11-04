@@ -52,6 +52,7 @@ type (
 		Version() VersionService
 		Webhook() WebhookService
 		Key() KeyService
+		SecureImage() SecureImageService
 	}
 
 	// CoordinatorService for managing coordinators
@@ -345,6 +346,14 @@ type (
 		Key(ID portainer.KeyID) (*portainer.Key, error)
 		Keys() ([]portainer.Key, error)
 		Create(keyObject *portainer.Key) error
+		Update(ID portainer.KeyID, keyObject *portainer.Key) error
+		Delete(ID portainer.KeyID) error
+		BucketName() string
+	}
+
+	SecureImageService interface {
+		SecureImages() ([]portainer.SecureImage, error)
+		BucketName() string
 	}
 )
 
