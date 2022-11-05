@@ -13,6 +13,7 @@ export default function keylistController(Notifications, $q, $scope, Keymanageme
   var KEY_TYPE = "";
 
   $scope.keyTitle = "";
+  $scope.keyType = "";
 
   var tempTeamIds = [];
 
@@ -159,6 +160,7 @@ export default function keylistController(Notifications, $q, $scope, Keymanageme
 
 
   KEY_TYPE = $stateParams.type;
+  $scope.keyType = KEY_TYPE;
   if (KEY_TYPE == "SIGNING") {
     $scope.keyTitle = "Enclave Signing"
     $scope.keySubtitle = "Manage your Signing Keys to build SGX enhanced containers"

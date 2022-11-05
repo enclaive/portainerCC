@@ -1,12 +1,14 @@
-<rd-header>
-    <rd-header-title title-text="{{keyTitle}}">
-        <!-- <a data-toggle="tooltip" title="Refresh" ui-sref="portainer.confidential-computing"
-            ui-sref-opts="{reload: true}">
-            <i class="fa fa-sync" aria-hidden="true"></i>
-        </a> -->
-    </rd-header-title>
-    <rd-header-content>{{keySubtitle}}</rd-header-content>
-</rd-header>
+<page-header ng-if="keyType == 'SIGNING'" title="'Manage SGX Signing Keys'" breadcrumbs="[
+    'PortainerCC',
+     'Keymanagement'
+     ]">
+</page-header>
+
+<page-header ng-if="keyType == 'FILE_ENC'" title="'Manage File Encryption Keys'" breadcrumbs="[
+    'PortainerCC',
+     'Keymanagement'
+     ]">
+</page-header>
 
 <information-panel title-text="Information">
     <span class="small text-muted">
@@ -20,8 +22,9 @@
 </span> -->
 <div class="row">
     <div class="col-sm-12">
-        <keys-datatable title-text="{{keyTitle}} Keys" title-icon="fa-key" dataset="keys"
-            table-key="enclaveKeys" order-by="description" teams="teams" multi-close="$ctrl.updateKeyAccess" multi-open="$ctrl.saveTempSelection"
-            remove-action="$ctrl.removeKey" export-action="$ctrl.exportKey" import-action="$ctrl.importKey" create-action="$ctrl.generateKey" new-key="formData"></keys-datatable>
+        <keys-datatable title-text="{{keyTitle}} Keys" title-icon="fa-key" dataset="keys" table-key="enclaveKeys"
+            order-by="description" teams="teams" multi-close="$ctrl.updateKeyAccess"
+            multi-open="$ctrl.saveTempSelection" remove-action="$ctrl.removeKey" export-action="$ctrl.exportKey"
+            import-action="$ctrl.importKey" create-action="$ctrl.generateKey" new-key="formData"></keys-datatable>
     </div>
 </div>

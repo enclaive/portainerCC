@@ -16,18 +16,19 @@
           </div>
           <div class="row">
 
-            <div class="col-sm-3">Teams:</div>
-            <div class="col-sm-9">
               <span class="small text-muted" ng-if="$ctrl.teams.length === 0">
                 You don't seem to have any teams to add users into. Head over to the <a ui-sref="portainer.teams">Teams
                   view</a> to create some.
               </span>
+              <por-access-management-users-selector options="$ctrl.teams" value="$ctrl.newKey.teamIds"
+                on-change="(console.log('hallo'))">
+              </por-access-management-users-selector>
+
               <span isteven-multi-select ng-if="$ctrl.teams.length > 0" input-model="$ctrl.teams"
                 output-model="$ctrl.newKey.teamIds" button-label="Name" item-label="Name" tick-property="ticked"
                 helper-elements="filter" search-property="Name"
                 translation="{nothingSelected: 'Select one or more teams', search: 'Search...'}">
               </span>
-            </div>
           </div>
         </div>
         <div class="col-sm-12 m-5" ng-if="!$ctrl.newKey.description.length > 0">
@@ -36,11 +37,13 @@
           </span>
         </div>
 
-        <button type="button" class="btn btn-sm btn-primary" ng-click="$ctrl.createAction()" ng-disabled="!$ctrl.newKey.description.length > 0">
+        <button type="button" class="btn btn-sm btn-primary" ng-click="$ctrl.createAction()"
+          ng-disabled="!$ctrl.newKey.description.length > 0">
           <i class="fa fa-plus space-right" aria-hidden="true"></i>Generate Key
         </button>
 
-        <button type="button" class="btn btn-sm btn-primary" ngf-select="$ctrl.importAction($file)" ng-disabled="!$ctrl.newKey.description.length > 0">
+        <button type="button" class="btn btn-sm btn-primary" ngf-select="$ctrl.importAction($file)"
+          ng-disabled="!$ctrl.newKey.description.length > 0">
           <i class="fa fa-upload space-right" aria-hidden="true"></i>Import Key
         </button>
 
