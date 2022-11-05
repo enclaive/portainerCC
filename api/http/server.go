@@ -37,6 +37,7 @@ import (
 	"github.com/portainer/portainer/api/http/handler/ldap"
 	"github.com/portainer/portainer/api/http/handler/motd"
 	"github.com/portainer/portainer/api/http/handler/portainercc"
+	"github.com/portainer/portainer/api/http/handler/ra"
 	"github.com/portainer/portainer/api/http/handler/registries"
 	"github.com/portainer/portainer/api/http/handler/resourcecontrols"
 	"github.com/portainer/portainer/api/http/handler/roles"
@@ -204,6 +205,9 @@ func (server *Server) Start() error {
 
 	var motdHandler = motd.NewHandler(requestBouncer)
 
+	var raHandler = ra.NewHandler(requestBouncer, server.DockerClientFactory)
+	raHandler.DataStore = server.DataStore
+
 	var registryHandler = registries.NewHandler(requestBouncer)
 	registryHandler.DataStore = server.DataStore
 	registryHandler.FileService = server.FileService
@@ -302,6 +306,7 @@ func (server *Server) Start() error {
 		MOTDHandler:               motdHandler,
 		OpenAMTHandler:            openAMTHandler,
 		FDOHandler:                fdoHandler,
+		RAHandler:                 raHandler,
 		RegistryHandler:           registryHandler,
 		ResourceControlHandler:    resourceControlHandler,
 		SettingsHandler:           settingsHandler,

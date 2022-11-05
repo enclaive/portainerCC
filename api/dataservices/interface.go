@@ -24,6 +24,8 @@ type (
 		BackupTo(w io.Writer) error
 		Export(filename string) (err error)
 		IsErrObjectNotFound(err error) bool
+		Coordinator() CoordinatorService
+		CoordinatorDeployment() CoordinatorDeploymentService
 		CustomTemplate() CustomTemplateService
 		EdgeGroup() EdgeGroupService
 		EdgeJob() EdgeJobService
@@ -51,6 +53,23 @@ type (
 		Webhook() WebhookService
 		Key() KeyService
 		SecureImage() SecureImageService
+	}
+
+	// CoordinatorService for managing coordinators
+	CoordinatorService interface {
+		Coordinators() ([]portainer.Coordinator, error)
+		Coordinator(ID portainer.CoordinatorID) (*portainer.Coordinator, error)
+		Create(coordinatorObject *portainer.Coordinator) error
+		Update(ID portainer.CoordinatorID, keyObject *portainer.Coordinator) error
+		Delete(ID portainer.CoordinatorID) error
+	}
+
+	CoordinatorDeploymentService interface {
+		CoordinatorDeployments() ([]portainer.CoordinatorDeployment, error)
+		CoordinatorDeployment(ID portainer.CoordinatorDeploymentID) (*portainer.CoordinatorDeployment, error)
+		Create(coordinatorDeploymentObject *portainer.CoordinatorDeployment) error
+		Update(ID portainer.CoordinatorDeploymentID, keyObject *portainer.CoordinatorDeployment) error
+		Delete(ID portainer.CoordinatorDeploymentID) error
 	}
 
 	// CustomTemplateService represents a service to manage custom templates

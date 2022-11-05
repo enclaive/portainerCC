@@ -3,6 +3,7 @@ package portainer
 import (
 	"context"
 	"crypto/rsa"
+	"encoding/pem"
 	"io"
 	"time"
 
@@ -156,6 +157,27 @@ type (
 		SecretKeyName             *string
 		LogLevel                  *string
 	}
+
+	Coordinator struct {
+		ID           CoordinatorID `json:"id"`
+		Name         string        `json:"name"`
+		ImageID      string        `json:"imageId"`
+		SigningKeyID int           `json:"signingKeyId"`
+		UniqueID     string        `json:"uniqueId"`
+		SignerID     string        `json:"signerId"`
+	}
+
+	CoordinatorID int
+
+	CoordinatorDeployment struct {
+		ID            CoordinatorDeploymentID `json:"id"`
+		CoordinatorID int                     `json:"coordinatorId"`
+		EndpointID    int                     `json:"endpointId"`
+		RootCert      pem.Block               `json:"rootCert"`
+		Verified      bool                    `json:"verified"`
+	}
+
+	CoordinatorDeploymentID int
 
 	// CustomTemplateVariableDefinition
 	CustomTemplateVariableDefinition struct {
