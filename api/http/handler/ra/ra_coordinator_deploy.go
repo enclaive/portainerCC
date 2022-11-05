@@ -22,6 +22,7 @@ type DeployCoordinatorParams struct {
 	EnvironmentID int `json:"environmentId"`
 }
 
+// FIXME image repo still hardcoded
 func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 
 	var params DeployCoordinatorParams
@@ -176,6 +177,9 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 
 	// connect container to coordinator network
 	err = targetClient.NetworkConnect(r.Context(), networkID, createdBody.ID, &network.EndpointSettings{
+		IPAddress:   "172.20.0.20",
+		Gateway:     "172.20.0.1",
+		IPPrefixLen: 16,
 		IPAMConfig: &network.EndpointIPAMConfig{
 			IPv4Address: "172.20.0.20",
 		},
@@ -197,7 +201,8 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	log.Info().Msg("CoordinatorID: " + strconv.FormatInt(int64(params.CoordinatorID), 10))
 	log.Info().Msg("EnvironmentID: " + strconv.FormatInt(int64(params.EnvironmentID), 10))
 
-	coordinatorDeployment := portainer.CoordinatorDeployment{
+	// new coordinatorDeployment Object
+	coordinatorDeployment := &portainer.CoordinatorDeployment{
 		CoordinatorID: params.CoordinatorID,
 		EndpointID:    params.EnvironmentID,
 		Verified:      false,
@@ -206,6 +211,7 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	log.Info().Msg("CoordinatorID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.CoordinatorID), 10))
 	log.Info().Msg("EnvironmentID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.EndpointID), 10))
 
+	// check if a coordinatorDeployment already exists for endpoint and if so, delete it
 	deployments, err := handler.DataStore.CoordinatorDeployment().CoordinatorDeployments()
 	for _, deployment := range deployments {
 		if deployment.EndpointID == params.EnvironmentID {
@@ -216,7 +222,8 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	err = handler.DataStore.CoordinatorDeployment().Create(&coordinatorDeployment)
+	// create new coordinatorDeployment in DB
+	err = handler.DataStore.CoordinatorDeployment().Create(coordinatorDeployment)
 	if err != nil {
 		return httperror.InternalServerError("could not create coordinatorDeployment in db", err)
 	}

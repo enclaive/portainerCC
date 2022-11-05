@@ -2,6 +2,7 @@ package ra
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
@@ -9,7 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"time"
 
 	"github.com/edgelesssys/ego/eclient"
 	httperror "github.com/portainer/libhttp/error"
@@ -50,10 +53,6 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(environmentID))
 	endpointUrl, err := url.ParseURL(endpoint.URL)
-	// config, err := crypto.CreateTLSConfigurationFromDisk(endpoint.TLSConfig.TLSCACertPath, endpoint.TLSConfig.TLSCertPath, endpoint.TLSConfig.TLSKeyPath, endpoint.TLSConfig.TLSSkipVerify)
-	// if err != nil {
-	// 	return httperror.InternalServerError("", err)
-	// }
 
 	endpointUrl.Scheme = "https"
 
@@ -84,24 +83,24 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	tr := &http.Transport{TLSClientConfig: config}
 	// client := &http.Client{Transport: tr}
 
+	// create custom tcp transport
 	log.Info().Msg("hello coordinator")
 	client := client.NewHTTPClient()
 	client.Transport = tr
-	// dialer := &net.Dialer{
-	// 	Timeout:   30 * time.Second,
-	// 	KeepAlive: 30 * time.Second,
-	// 	// DualStack: true, // this is deprecated as of go 1.16
-	// }
-	// or create your own transport, there's an example on godoc.
-	// tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-	// 	log.Info().Msg(endpointUrl.Host)
-	// 	if addr == "coordinator:9001" {
-	// 		log.Info().Msg("Hey im another address!!!")
-	// 		addr = "endpointUrl.Host"
-	// 	}
-	// 	return dialer.DialContext(ctx, network, addr)
-	// }
-	resp, err := client.Get("https://20.169.251.207:4433/quote")
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
+	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		log.Info().Msg(endpointUrl.Host)
+		if addr == "coordinator:9001" {
+			log.Info().Msg("Ich bin eine andere Adresse")
+			addr = endpointUrl.Host
+		}
+		return dialer.DialContext(ctx, network, addr)
+	}
+	resp, err := client.Get("https://coordinator:9001/quote")
 	if err != nil {
 		log.Err(err)
 	}
@@ -116,6 +115,7 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	quoteData := gjson.GetBytes(body, "data")
 	err = json.Unmarshal([]byte(quoteData.String()), &certQuoteData)
 
+	// decode root certificate
 	// https://github.com/edgelesssys/era/blob/master/era/era.go
 	var certs []*pem.Block
 	block, rest := pem.Decode([]byte(certQuoteData.Cert))
@@ -137,6 +137,7 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 
 	coordinatorDeployment.RootCert = *rootCert
 
+	// verify Quote
 	report, err := eclient.VerifyRemoteReport(certQuoteData.Quote)
 	if err != nil {
 		return httperror.InternalServerError("could not verify remote report", err)
@@ -165,6 +166,8 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	}
 
 	coordinatorDeployment.Verified = true
+
+	// update coordinatorDeployment in DB
 	err = handler.DataStore.CoordinatorDeployment().Update(coordinatorDeployment.ID, coordinatorDeployment)
 	if err != nil {
 		return httperror.InternalServerError("could not update coordinator deployment in db", err)
