@@ -1,25 +1,17 @@
 import { useQuery } from "react-query";
+import { KeyId } from "../keymanagement/types";
+import { buildCoordinator } from "./coordinator.service";
 
 
-// export function useKeys<T = KeyEntry[]>(
-//     type: string,
-//     enabled = true,
-//     select: (data: KeyEntry[]) => T = (data) => data as unknown as T
-//   ) {
-//     // const keys = useQuery(
-//     //   ['keys'],
-//     //   () => getKeys(type),
-//     //   {
-//     //     meta: {
-//     //       error: { title: 'Failure', message: 'Unable to load keys' },
-//     //     },
-//     //     enabled,
-//     //     select,
-//     //   }
-//     // );
-  
-//     // return keys;
-
-//     return null;
-//   }
+export function useBuildCoordinator(name: string, keyId: KeyId) {
+    return useQuery(
+      ['coordinator'],
+      () => buildCoordinator(name, keyId),
+      {
+        meta: {
+          error: { title: 'Failure', message: 'Unable to build coordinator' },
+        },
+      }
+    );
+  }
   

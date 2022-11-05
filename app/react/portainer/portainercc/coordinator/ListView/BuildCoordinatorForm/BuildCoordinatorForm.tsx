@@ -2,24 +2,27 @@ import { Formik, Field, Form } from 'formik';
 
 import { Icon } from '@/react/components/Icon';
 
-import { useState } from 'react';
 import { FormControl } from '@@/form-components/FormControl';
 import { Widget } from '@@/Widget';
 import { Input } from '@@/form-components/Input';
 import { LoadingButton } from '@@/buttons/LoadingButton';
-import { KeyEntry } from '../../../keymanagement/types';
+import { KeyEntry } from '@/react/portainer/portainercc/keymanagement/types';
+
 import { KeySelector } from '@@/KeySelector';
+import { FormValues } from '@/react/portainer/portainercc/coordinator/ListView/BuildCoordinatorForm/types'
+import { buildCoordinator } from '../../coordinator.service';
 
 interface Props {
     keys: KeyEntry[]
 }
 
-export function BuildCoordinatorForm({
-    keys
-}: Props) {
-    let title = "Build your coordinator image"
+export function BuildCoordinatorForm({ keys }: Props) {
+    let title = "Build a new coordinator image"
 
-    const [selectedKey, setSelectedKey] = useState<readonly number[]>([]);
+    const initialValues = {
+        name: '',
+        key: 0
+    }
 
 
     return (
@@ -34,8 +37,8 @@ export function BuildCoordinatorForm({
                     />
                     <Widget.Body>
                         <Formik
-                            initialValues={{ name: '', key: null }}
-                            onSubmit={(() => Promise.resolve(null))}
+                            initialValues={initialValues}
+                            onSubmit={handleBuild}
                             key={1}
                         >
                             {({
@@ -69,7 +72,7 @@ export function BuildCoordinatorForm({
 
 
                                     <FormControl
-                                        inputId="keys"
+                                        inputId="key"
                                         label="SGX Signign Key"
                                         errors="err"
                                         required
@@ -77,8 +80,8 @@ export function BuildCoordinatorForm({
 
 
                                         <KeySelector
-                                            value={selectedKey}
-                                            onChange={(keys) => setSelectedKey(keys)}
+                                            value={values.key}
+                                            onChange={(key) => setFieldValue('key', key)}
                                             keys={keys}
                                             placeholder="Select a key"
                                         />
@@ -92,19 +95,11 @@ export function BuildCoordinatorForm({
                                                 disabled={!isValid}
                                                 data-cy="team-createTeamButton"
                                                 isLoading={isSubmitting}
-                                                loadingText="Creating key..."
+                                                loadingText="Building coordinator image, this may take a while..."
+                                                // onClick={() => handleBuildClick(values)}
                                             >
                                                 <Icon icon="plus" feather size="md" />
                                                 Build
-                                            </LoadingButton>
-                                            <LoadingButton
-                                                disabled={!isValid}
-                                                data-cy="team-createTeamButton"
-                                                isLoading={isSubmitting}
-                                                loadingText="Creating team..."
-                                            >
-                                                <Icon icon="trash" feather size="md" />
-                                                Remove
                                             </LoadingButton>
                                         </div>
                                     </div>
@@ -114,6 +109,18 @@ export function BuildCoordinatorForm({
                     </Widget.Body>
                 </Widget>
             </div>
-        </div>
+        </div >
     );
+
+    async function handleBuild(values: FormValues) {
+        const data = await buildCoordinator(values.name, values.key)
+        console.log(data);
+        return null;
+    }
+
+    // function handleBuildClick(values: any) {
+    //     console.log("MOIN");
+    //     console.log(values)
+    // }
+
 }

@@ -4,15 +4,15 @@ import { PortainerSelect } from '@@/form-components/PortainerSelect'
 
 interface Props {
   name?: string;
-  value: KeyId[] | readonly KeyId[];
-  onChange(value: readonly KeyId[]): void;
+  value: KeyId;
+  onChange(value: KeyId): void;
   keys: KeyEntry[];
   dataCy?: string;
   inputId?: string;
   placeholder?: string;
 }
 
-export function TeamsSelector({
+export function KeySelector({
   name,
   value,
   onChange,
@@ -26,10 +26,14 @@ export function TeamsSelector({
   return (
     <PortainerSelect<number>
       name={name}
-      isMulti
       options={options}
       value={value}
-      onChange={(value) => onChange(value)}
+      onChange={(value) => {
+        if (value)
+          onChange(value)
+        else
+          onChange(0)
+      }}
       data-cy={dataCy}
       inputId={inputId}
       placeholder={placeholder}
