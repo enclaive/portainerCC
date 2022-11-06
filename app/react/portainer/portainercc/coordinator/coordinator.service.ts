@@ -25,7 +25,7 @@ import { KeyId } from '../keymanagement/types';
 export async function buildCoordinator(name: string, keyId: KeyId) {
     try {
         console.log("hier im axioas")
-        const { data } = await axios.post(buildUrl(undefined, "build"), { name: name, signingKeyId: keyId });
+        const { data } = await axios.post(buildUrl(undefined, "build"), { Name: name, SigningKeyId: keyId });
         return data;
     } catch (e) {
         throw parseAxiosError(e as Error, 'Unable to build coordinator')
@@ -33,7 +33,7 @@ export async function buildCoordinator(name: string, keyId: KeyId) {
 }
 
 function buildUrl(id?: KeyId, action?: string) {
-    let url = '/portainercc/coordinator';
+    let url = '/ra/coordinator';
 
     if (id) {
         url += `/${id}`;

@@ -3,10 +3,10 @@ import { Column } from 'react-table';
 
 import { CoordintaorListEntry } from '../../types';
 
-export const mrsigner: Column<CoordintaorListEntry> = {
-  Header: 'MRSIGNER',
-  accessor: (row) => row.mrsigner,
+export const id: Column<CoordintaorListEntry> = {
+  Header: 'ID',
+  accessor: (row) => row.id,
   disableFilters: true,
   canHide: false,
-  sortType: 'string',
+  sortType: 'number',
 };

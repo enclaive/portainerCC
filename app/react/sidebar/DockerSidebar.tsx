@@ -9,6 +9,7 @@ import {
   Trello,
   Clipboard,
   Edit,
+  Codesandbox,
 } from 'react-feather';
 
 import {
@@ -55,17 +56,17 @@ export function DockerSidebar({ environmentId, environment }: Props) {
 
   const setupSubMenuProps = isSwarmManager
     ? {
-        label: 'Swarm',
-        icon: Trello,
-        to: 'docker.swarm',
-        dataCy: 'portainerSidebar-swarm',
-      }
+      label: 'Swarm',
+      icon: Trello,
+      to: 'docker.swarm',
+      dataCy: 'portainerSidebar-swarm',
+    }
     : {
-        label: 'Host',
-        icon: Trello,
-        to: 'docker.host',
-        dataCy: 'portainerSidebar-host',
-      };
+      label: 'Host',
+      icon: Trello,
+      to: 'docker.host',
+      dataCy: 'portainerSidebar-host',
+    };
 
   const featSubMenuTo = isSwarmManager
     ? 'docker.swarm.featuresConfiguration'
@@ -80,6 +81,14 @@ export function DockerSidebar({ environmentId, environment }: Props) {
         environmentId={environmentId}
         platformPath="docker"
         data-cy="dockerSidebar-dashboard"
+      />
+
+      <SidebarItem
+        to="docker.coordinator"
+        params={{ endpointId: environmentId }}
+        icon={Codesandbox}
+        label="Coordinator"
+        data-cy="dockerSidebar-containers"
       />
 
       <SidebarItem

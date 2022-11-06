@@ -5,6 +5,7 @@ import { isOfflineEndpoint } from '@/portainer/helpers/endpointHelper';
 import { PortainerEndpointTypes } from 'Portainer/models/endpoint/models';
 import { useContainerStatusComponent } from '@/react/docker/DashboardView/ContainerStatus';
 import { useImagesTotalSizeComponent } from '@/react/docker/DashboardView/ImagesTotalSize';
+import { useCoordinatorStatusComponent } from '@/react/docker/DashboardView/CoordinatorStatus'
 
 angular.module('portainer.docker').controller('DashboardController', [
   '$scope',
@@ -93,6 +94,7 @@ angular.module('portainer.docker').controller('DashboardController', [
         .then(function success(data) {
           $scope.containers = data.containers;
           $scope.containerStatusComponent = useContainerStatusComponent(data.containers);
+          $scope.coordinatorStatusComponent = useCoordinatorStatusComponent();
 
           $scope.images = data.images;
           $scope.imagesTotalSizeComponent = useImagesTotalSizeComponent(imagesTotalSize(data.images));

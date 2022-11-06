@@ -1,9 +1,16 @@
-import { mrenclave } from './mrenclave';
-import { mrsigner } from './mrsigner';
-import { timestamp } from './timestamp'
+import { id } from "./id";
+import { name } from "./name";
+import { imageid } from "./imageid";
+import { signingkeyid } from "./signingkeyid";
+import { uniqueid } from "./uniqueid";
+import { signerid } from "./signerid";
 
 export const columns = [
-  mrenclave,
-  mrsigner,
-  timestamp,
+  id,
+  name,
+  imageid,
+  signingkeyid,
+  uniqueid,
+  signerid,
 ];
+

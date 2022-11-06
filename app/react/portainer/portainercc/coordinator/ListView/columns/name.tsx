@@ -3,9 +3,9 @@ import { Column } from 'react-table';
 
 import { CoordintaorListEntry } from '../../types';
 
-export const mrenclave: Column<CoordintaorListEntry> = {
-  Header: 'MRENCLAVE',
-  accessor: (row) => row.mrenclave,
+export const name: Column<CoordintaorListEntry> = {
+  Header: 'Name',
+  accessor: (row) => row.name,
   disableFilters: true,
   canHide: false,
   sortType: 'string',

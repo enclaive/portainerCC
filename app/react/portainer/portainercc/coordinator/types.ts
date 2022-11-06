@@ -1,7 +1,10 @@
 export type CoordinatorImageId = number;
 
-export type CoordintaorListEntry = {
-    mrsigner: string,
-    mrenclave: string,
-    timestamp: Date,
+export type CoordinatorListEntry = {
+    id: number,
+    name: string,
+    imageId: string,
+    signingKeyId: number,
+    uniqueId: string,
+    signerId: string,
 }
