@@ -112,6 +112,7 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                                 data-cy="team-createTeamButton"
                                                 isLoading={isSubmitting}
                                                 loadingText="Creating team..."
+                                                color='secondary'
                                             >
                                                 <Icon icon="download" feather size="md" />
                                                 Export
@@ -121,6 +122,7 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                                 data-cy="team-createTeamButton"
                                                 isLoading={isSubmitting}
                                                 loadingText="Creating team..."
+                                                color='danger'
                                             >
                                                 <Icon icon="trash" feather size="md" />
                                                 Remove

@@ -16,37 +16,19 @@ export function CoordinatorStatus() {
       <div>
         <div className="vertical-center space-right pr-5">
           <Icon
-            icon="power"
+            icon="shield"
             className={clsx('icon icon-sm icon-success')}
             feather
           />
-          1 running
+          Verified
         </div>
         <div className="vertical-center space-right">
           <Icon
-            icon="power"
+            icon="shield"
             className={clsx('icon icon-sm icon-danger')}
             feather
           />
-          1 stopped
-        </div>
-      </div>
-      <div>
-        <div className="vertical-center space-right pr-5">
-          <Icon
-            icon="heart"
-            className={clsx('icon icon-sm icon-success')}
-            feather
-          />
-          1 healthy
-        </div>
-        <div className="vertical-center space-right">
-          <Icon
-            icon="heart"
-            className={clsx('icon icon-sm icon-danger')}
-            feather
-          />
-           1 unhealthy
+          Not verified
         </div>
       </div>
     </div>

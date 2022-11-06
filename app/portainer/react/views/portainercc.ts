@@ -3,6 +3,7 @@ import { StateRegistry } from '@uirouter/angularjs';
 
 import { KeyListView } from '@/react/portainer/portainercc/keymanagement';
 import { CoordinatorImagesListView } from '@/react/portainer/portainercc/coordinator';
+import { CoordinatorDeploymentView } from '@/react/docker/portainercc/coordinator/DeploymentView';
 
 import { r2a } from '@/react-tools/react2angular';
 import { withCurrentUser } from '@/react-tools/withCurrentUser';
@@ -22,6 +23,9 @@ export const portainerCCModule = angular
   ).component(
     'coordinatorBuild',
     r2a(withUIRouter(withReactQuery(withCurrentUser(CoordinatorImagesListView))), [])
+  ).component(
+    'coordinatorDeployment',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(CoordinatorDeploymentView))), [])
   ).name;
 
 /* @ngInject */
@@ -52,6 +56,16 @@ function config($stateRegistryProvider: StateRegistry) {
     views: {
       'content@': {
         component: 'coordinatorBuild',
+      },
+    },
+  });
+
+  $stateRegistryProvider.register({
+    name: 'docker.coordinator',
+    url: '/coordinator',
+    views: {
+      'content@': {
+        component: 'coordinatorDeployment',
       },
     },
   });
