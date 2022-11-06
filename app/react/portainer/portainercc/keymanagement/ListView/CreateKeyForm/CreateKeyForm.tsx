@@ -2,13 +2,14 @@ import { Formik, Field, Form } from 'formik';
 
 import { Icon } from '@/react/components/Icon';
 
-import { useState } from 'react';
 import { FormControl } from '@@/form-components/FormControl';
 import { Widget } from '@@/Widget';
 import { Input } from '@@/form-components/Input';
 import { LoadingButton } from '@@/buttons/LoadingButton';
 import { TeamsSelector } from '@@/TeamsSelector';
 import { Team } from '../../../../users/teams/types'
+import { FormValues } from './types';
+import { createKey } from '../../keys.service';
 
 interface Props {
     keytype: string;
@@ -25,7 +26,10 @@ export function CreateKeyForm({ keytype, teams }: Props) {
         throw Error("invalid key type")
     }
 
-    const [selectedTeams, setSelectedTeams] = useState<readonly number[]>([]);
+    const initialValues = {
+        description: '',
+        teamAccessPolicies: []
+    }
 
     return (
         <div className="row">
@@ -39,8 +43,8 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                     />
                     <Widget.Body>
                         <Formik
-                            initialValues={[]}
-                            onSubmit={(() => Promise.resolve(null))}
+                            initialValues={initialValues}
+                            onSubmit={handleSubmit}
                             key={1}
                         >
                             {({
@@ -57,15 +61,15 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                     noValidate
                                 >
                                     <FormControl
-                                        inputId="key_name"
-                                        label="Name"
+                                        inputId="key_description"
+                                        label="Description"
                                         errors="err"
                                         required
                                     >
                                         <Field
                                             as={Input}
-                                            name="name"
-                                            id="key_name"
+                                            name="description"
+                                            id="key_description"
                                             required
                                             placeholder="e.g. super key"
                                             data-cy="team-teamNameInput"
@@ -78,9 +82,10 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                         errors="err"
                                         required
                                     >
+
                                         <TeamsSelector
-                                            value={selectedTeams}
-                                            onChange={(value) => setSelectedTeams(value)}
+                                            value={values.teamAccessPolicies}
+                                            onChange={(values) => setFieldValue('teamAccessPolicies', values)}
                                             teams={teams}
                                             placeholder="Select one or more teams to access the key"
                                         />
@@ -107,26 +112,6 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                                 <Icon icon="upload" feather size="md" />
                                                 Import
                                             </LoadingButton>
-                                            <LoadingButton
-                                                disabled={!isValid}
-                                                data-cy="team-createTeamButton"
-                                                isLoading={isSubmitting}
-                                                loadingText="Creating team..."
-                                                color='secondary'
-                                            >
-                                                <Icon icon="download" feather size="md" />
-                                                Export
-                                            </LoadingButton>
-                                            <LoadingButton
-                                                disabled={!isValid}
-                                                data-cy="team-createTeamButton"
-                                                isLoading={isSubmitting}
-                                                loadingText="Creating team..."
-                                                color='danger'
-                                            >
-                                                <Icon icon="trash" feather size="md" />
-                                                Remove
-                                            </LoadingButton>
                                         </div>
                                     </div>
                                 </Form>
@@ -137,4 +122,19 @@ export function CreateKeyForm({ keytype, teams }: Props) {
             </div>
         </div>
     );
+
+    async function handleSubmit(values: FormValues) {
+        //TODO
+        let access = values.teamAccessPolicies.reduce((prev: any, current: any) => {
+            return {
+                ...prev,
+                [current.toString()]: {
+                    "RoleId": 0
+                }
+            }
+        }, {})
+        const data = await createKey(keytype, values.description, access)
+        console.log(data);
+        return null;
+    }
 }

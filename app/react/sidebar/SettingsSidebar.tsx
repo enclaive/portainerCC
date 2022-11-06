@@ -129,7 +129,6 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
             label="PortainerCC"
             to="portainer.portainerCC"
             icon={Shield}
-            openOnPaths={['portainer']}
           >
             <SidebarItem
               to="portainer.coordinator-build"
