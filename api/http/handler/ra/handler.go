@@ -50,5 +50,8 @@ func NewHandler(bouncer requestBouncer, dockerClientFactory *docker.ClientFactor
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorDeploy))).Methods(http.MethodPost)
 	h.Handle("/ra/coordinator/deploy/list",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.raCoordinatorDeployList))).Methods(http.MethodGet)
+
+	h.Handle("/ra/services/add",
+		bouncer.PublicAccess(httperror.LoggerHandler(h.raServiceAdd))).Methods(http.MethodPost)
 	return h
 }

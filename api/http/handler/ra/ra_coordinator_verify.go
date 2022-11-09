@@ -56,32 +56,10 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 
 	endpointUrl.Scheme = "https"
 
-	// https://forfuncsake.github.io/post/2017/08/trust-extra-ca-cert-in-go-app/
-	// Get the SystemCertPool, continue with an empty pool on error
-	// localCertFile := "/coordinator/root.cert"
-	// rootCAs, _ := x509.SystemCertPool()
-	// if rootCAs == nil {
-	// 	rootCAs = x509.NewCertPool()
-
-	// }
-
-	// Read in the cert file
-	// certs, err := ioutil.ReadFile(localCertFile)
-	// if err != nil {
-	// 	return httperror.InternalServerError("failed to apply coordinator root certificate", err)
-	// }
-
-	// Append our cert to the system pool
-	// if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-	// 	fmt.Println("No certs appended, using system certs only")
-	// }
-
-	// Trust the augmented cert pool in our client
 	config := &tls.Config{
 		InsecureSkipVerify: true,
 	}
 	tr := &http.Transport{TLSClientConfig: config}
-	// client := &http.Client{Transport: tr}
 
 	// create custom tcp transport
 	log.Info().Msg("hello coordinator")
@@ -145,7 +123,7 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	log.Info().Msg("Data: " + string(certQuoteData.Quote))
 	log.Info().Msg("Report: " + string(report.Data))
 
-	coordinator, err := handler.DataStore.Coordinator().Coordinator(portainer.CoordinatorID(1))
+	coordinator, err := handler.DataStore.Coordinator().Coordinator(portainer.CoordinatorID(coordinatorDeployment.CoordinatorID))
 	if err != nil {
 		return httperror.InternalServerError("could not fetch coordinator from db", err)
 	}
