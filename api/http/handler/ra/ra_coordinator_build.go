@@ -22,6 +22,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type ErrorLine struct {
+	Error       string      `json:"error"`
+	ErrorDetail ErrorDetail `json:"errorDetail"`
+}
+
+type ErrorDetail struct {
+	Message string `json:"message"`
+}
+
 type PostCoordinatorParams struct {
 	Name         string
 	SigningKeyId int
@@ -103,11 +112,16 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		SigningKeyID: params.SigningKeyId,
 	}
 
+	// print(res.Body)
 	// extract UniqueID and SignerID from Build Logs
-	scanner := bufio.NewScanner(res.Body)
+	// scanner := bufio.NewScanner(res.Body)
+
 	var lastLine string
+
+	scanner := bufio.NewScanner(res.Body)
 	for scanner.Scan() {
 		lastLine = scanner.Text()
+		log.Info().Str("Docker", "").Msg(scanner.Text())
 		if strings.Contains(lastLine, "UniqueID") {
 			split := strings.Split(lastLine, ",")
 			for _, line := range split {
@@ -127,6 +141,31 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 			}
 		}
 	}
+
+	// return nil
+
+	// var lastLine string
+	// for scanner.Scan() {
+	// 	lastLine = scanner.Text()
+	// 	if strings.Contains(lastLine, "UniqueID") {
+	// 		split := strings.Split(lastLine, ",")
+	// 		for _, line := range split {
+	// 			fmt.Println(line)
+	// 			if strings.Contains(line, "UniqueID") {
+	// 				uniqueID := strings.Split(line, ":")[1]
+	// 				uniqueID = strings.ReplaceAll(uniqueID, `\"`, "")
+	// 				uniqueID = strings.ReplaceAll(uniqueID, ` `, "")
+	// 				coordinatorObject.UniqueID = uniqueID
+	// 			}
+	// 			if strings.Contains(line, "SignerID") {
+	// 				signerID := strings.Split(line, ":")[1]
+	// 				signerID = strings.ReplaceAll(signerID, `\"`, "")
+	// 				signerID = strings.ReplaceAll(signerID, ` `, "")
+	// 				coordinatorObject.SignerID = signerID
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	//push image
 	authConfig := types.AuthConfig{
@@ -158,15 +197,6 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to generate new coordinator", err}
 	}
 	return response.JSON(w, coordinatorObject)
-}
-
-type ErrorLine struct {
-	Error       string      `json:"error"`
-	ErrorDetail ErrorDetail `json:"errorDetail"`
-}
-
-type ErrorDetail struct {
-	Message string `json:"message"`
 }
 
 func print(rd io.Reader) error {

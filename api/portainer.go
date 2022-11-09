@@ -170,14 +170,65 @@ type (
 	CoordinatorID int
 
 	CoordinatorDeployment struct {
-		ID            CoordinatorDeploymentID `json:"id"`
-		CoordinatorID int                     `json:"coordinatorId"`
-		EndpointID    int                     `json:"endpointId"`
-		RootCert      pem.Block               `json:"rootCert"`
-		Verified      bool                    `json:"verified"`
+		ID             CoordinatorDeploymentID `json:"id"`
+		CoordinatorID  int                     `json:"coordinatorId"`
+		EndpointID     int                     `json:"endpointId"`
+		RootCert       pem.Block               `json:"rootCert"`
+		UserCert       pem.Block               `json:"userCert"`
+		UserPrivateKey pem.Block               `json:"userPrivKey"`
+		Manifest       CoordinatorManifest     `json:"manifest"`
+		Verified       bool                    `json:"verified"`
 	}
 
 	CoordinatorDeploymentID int
+
+	CoordinatorManifest struct {
+		Packages map[string]PackageProperties `json:"Packages"`
+		Marbles  map[string]Marble            `json:"Marbles"`
+		Secrets  map[string]Secret            `json:"Secrets"`
+		Users    map[string]CoordinatorUser   `json:"Users"`
+		Roles    map[string]CoordinatorRole   `json:"Roles"`
+	}
+
+	PackageProperties struct {
+		SignerID        string `json:"SignerID"`
+		ProductID       int    `json:"ProductID"`
+		SecurityVersion int    `json:"SecurityVersion"`
+	}
+
+	Secret struct {
+		Type        string `json:"Type"`
+		Size        int    `json:"Size"`
+		UserDefined bool   `json:"UserDefined"`
+	}
+
+	Marble struct {
+		Package    string     `json:"Package"`
+		Parameters Parameters `json:"Parameters"`
+	}
+
+	Parameters struct {
+		Files map[string]File `json:"Files"`
+		Env   map[string]File `json:"Env"`
+		Argv  []string        `json:"Argv"`
+	}
+
+	File struct {
+		Data        string
+		Encoding    string
+		NoTemplates bool
+	}
+
+	CoordinatorUser struct {
+		Certificate string   `json:"Certificate"`
+		Roles       []string `json:"Roles"`
+	}
+
+	CoordinatorRole struct {
+		ResourceType  string   `json:"ResourceType"`
+		ResourceNames []string `json:"ResourceNames"`
+		Actions       []string `json:"Actions"`
+	}
 
 	// CustomTemplateVariableDefinition
 	CustomTemplateVariableDefinition struct {

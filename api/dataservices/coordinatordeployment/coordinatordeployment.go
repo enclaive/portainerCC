@@ -46,7 +46,7 @@ func (service *Service) CoordinatorDeployments() ([]portainer.CoordinatorDeploym
 			}
 
 			coordinatorDeployments = append(coordinatorDeployments, *coordinatorDeployment)
-			return &portainer.Coordinator{}, nil
+			return &portainer.CoordinatorDeployment{}, nil
 		})
 	return coordinatorDeployments, err
 }
