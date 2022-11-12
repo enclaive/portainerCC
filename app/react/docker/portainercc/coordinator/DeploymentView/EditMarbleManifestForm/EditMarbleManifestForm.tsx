@@ -1,23 +1,19 @@
 import { Formik, Field, Form } from 'formik';
 
-import { Icon } from '@/react/components/Icon';
-
 import { FormControl } from '@@/form-components/FormControl';
 import { Widget } from '@@/Widget';
 import { Input } from '@@/form-components/Input';
 import { LoadingButton } from '@@/buttons/LoadingButton';
-import { KeyEntry } from '@/react/portainer/portainercc/keymanagement/types';
 
-import { KeySelector } from '@@/KeySelector';
 import { FormValues } from '@/react/portainer/portainercc/coordinator/ListView/BuildCoordinatorForm/types'
-import { buildCoordinator } from '../../coordinator.service';
+import { MarbleManifest } from '../types';
 
 interface Props {
-    keys: KeyEntry[]
+    manifest: MarbleManifest
 }
 
-export function BuildCoordinatorForm({ keys }: Props) {
-    let title = "Build a new coordinator image"
+export function EditMarbleManifestForm({ manifest }: Props) {
+    let title = "Edit your manifest file"
 
     const initialValues = {
         name: '',
@@ -30,7 +26,7 @@ export function BuildCoordinatorForm({ keys }: Props) {
             <div className="col-lg-12 col-md-12 col-xs-12">
                 <Widget>
                     <Widget.Title
-                        icon="plus"
+                        icon="edit"
                         title={title}
                         featherIcon
                         className="vertical-center"
@@ -54,6 +50,8 @@ export function BuildCoordinatorForm({ keys }: Props) {
                                     onSubmit={handleSubmit}
                                     noValidate
                                 >
+
+                                
                                     <FormControl
                                         inputId="key_name"
                                         label="Name"
@@ -71,24 +69,7 @@ export function BuildCoordinatorForm({ keys }: Props) {
                                     </FormControl>
 
 
-                                    <FormControl
-                                        inputId="key"
-                                        label="SGX Signign Key"
-                                        errors="err"
-                                        required
-                                    >
-
-
-                                        <KeySelector
-                                            value={values.key}
-                                            onChange={(key) => setFieldValue('key', key)}
-                                            keys={keys}
-                                            placeholder="Select a key"
-                                        />
-
-                                    </FormControl>
-
-
+                                {/* Buttons */}
                                     <div className="form-group">
                                         <div className="col-sm-12">
                                             <LoadingButton
@@ -98,8 +79,7 @@ export function BuildCoordinatorForm({ keys }: Props) {
                                                 loadingText="Building coordinator image, this may take a while..."
                                                 // onClick={() => handleBuildClick(values)}
                                             >
-                                                <Icon icon="plus" feather size="md" />
-                                                Build
+                                                Update Manifest
                                             </LoadingButton>
                                         </div>
                                     </div>
@@ -113,8 +93,6 @@ export function BuildCoordinatorForm({ keys }: Props) {
     );
 
     async function handleBuild(values: FormValues) {
-        const data = await buildCoordinator(values.name, values.key)
-        console.log(data);
         return null;
     }
 

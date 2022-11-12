@@ -2,6 +2,7 @@ import angular from 'angular';
 import { StateRegistry } from '@uirouter/angularjs';
 
 import { KeyListView } from '@/react/portainer/portainercc/keymanagement';
+import { ConfidentialImagesListView } from '@/react/portainer/portainercc/confidential-images';
 import { CoordinatorImagesListView } from '@/react/portainer/portainercc/coordinator';
 import { CoordinatorDeploymentView } from '@/react/docker/portainercc/coordinator/DeploymentView';
 
@@ -14,8 +15,8 @@ export const portainerCCModule = angular
   .module('portainer.app.portainercc', [])
   .config(config)
   .component(
-    'raList',
-    r2a(withUIRouter(withReactQuery(withCurrentUser(KeyListView))), [])
+    'confimages',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(ConfidentialImagesListView))), [])
   )
   .component(
     'keymanagement',
@@ -41,11 +42,11 @@ function config($stateRegistryProvider: StateRegistry) {
   });
 
   $stateRegistryProvider.register({
-    name: 'portainer.raList',
-    url: '/remote-attestation',
+    name: 'portainer.confimages',
+    url: '/confidential-images',
     views: {
       'content@': {
-        component: 'raList',
+        component: 'confimages',
       },
     },
   });

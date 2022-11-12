@@ -5,8 +5,8 @@ import { useKeys } from '../../keymanagement/queries';
 import { Datatable } from '@@/datatables';
 import { columns } from './columns';
 import { Codesandbox } from 'react-feather';
-import { CoordinatorListEntry } from '../types'
 import { createStore } from '@/react/portainer/environments/update-schedules/ListView/datatable-store';
+import { useCoordinatorImages } from '../queries';
 
 const storageKey = 'portainercc-coordinators';
 const useStore = createStore(storageKey);
@@ -16,29 +16,13 @@ export function CoordinatorImagesListView() {
     const store = useStore();
 
     const keysQuery = useKeys('SIGNING')
-    const coordintaorQuery = null;
-
-    const exampleCoordinatorResult: CoordinatorListEntry[] = [
-        {
-            id: 1,
-            name: "moin",
-            imageId: "AF39BBAD222",
-            signingKeyId: 1,
-            uniqueId: "ABC123",
-            signerId: "DEF999"
-        },
-        {
-            id: 2,
-            name: "cool",
-            imageId: "AF39BBAD222",
-            signingKeyId: 1,
-            uniqueId: "ABC123",
-            signerId: "DEF999"
-        }
-    ]
+    const coordintaorQuery = useCoordinatorImages();
 
     let title = "Coordinator images";
 
+    if (!coordintaorQuery.data) {
+        return null;
+    }
 
     return (
         <>
@@ -48,6 +32,7 @@ export function CoordinatorImagesListView() {
                 <BuildCoordinatorForm keys={keysQuery.data} />
             )}
 
+            
             <Datatable
                 columns={columns}
                 titleOptions={{
@@ -55,15 +40,15 @@ export function CoordinatorImagesListView() {
                     icon: Codesandbox,
                 }}
                 disableSelect
-                dataset={exampleCoordinatorResult}
+                dataset={coordintaorQuery.data}
                 settingsStore={store}
                 storageKey={storageKey}
                 emptyContentLabel="No keys found"
                 // isLoading={listQuery.isLoading}
-                totalCount={exampleCoordinatorResult.length}
-                // renderTableActions={(selectedRows) => (
-                //     <TableActions selectedRows={selectedRows} />
-                // )}
+                totalCount={coordintaorQuery.data.length}
+            // renderTableActions={(selectedRows) => (
+            //     <TableActions selectedRows={selectedRows} />
+            // )}
             />
         </>
     );

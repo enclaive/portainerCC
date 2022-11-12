@@ -40,7 +40,6 @@ export function KeyListView() {
     if (!keysQuery.data) {
         return null;
     }
-    console.log(keysQuery)
 
     return (
         <>

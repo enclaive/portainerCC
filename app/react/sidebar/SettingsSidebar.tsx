@@ -145,8 +145,8 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
               label="File Encryption Keys"
             />
             <SidebarItem
-              to="portainer.raList"
-              label="Remote Attestation List"
+              to="portainer.confimages"
+              label="Confidential Images"
             />
           </SidebarItem>
       )}
