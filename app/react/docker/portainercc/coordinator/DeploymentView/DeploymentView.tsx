@@ -223,7 +223,7 @@ export function CoordinatorDeploymentView() {
                 </div>
             </div >
 
-            <EditMarbleManifestForm manifest={exampleManifest} />
+            <EditMarbleManifestForm origManifest={exampleManifest} />
 
         </>
     );

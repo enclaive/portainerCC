@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Formik, Field, Form } from 'formik';
 
 import { FormControl } from '@@/form-components/FormControl';
@@ -8,17 +9,13 @@ import { LoadingButton } from '@@/buttons/LoadingButton';
 import { MarbleManifest } from '../types';
 
 interface Props {
-    manifest: MarbleManifest
+    origManifest: MarbleManifest
 }
 
-export function EditMarbleManifestForm({ manifest }: Props) {
+export function EditMarbleManifestForm({ origManifest }: Props) {
     let title = "Edit your manifest file"
 
-    const initialValues = {
-        manifest: { Packages: {}, Marbles: {}},
-        name: '',
-    }
-
+    const [manifest, setManifest] = useState(origManifest);
 
     return (
         <div className="row">
@@ -32,7 +29,7 @@ export function EditMarbleManifestForm({ manifest }: Props) {
                     />
                     <Widget.Body>
                         <Formik
-                            initialValues={initialValues}
+                            initialValues={manifest}
                             onSubmit={handleBuild}
                             key={1}
                         >
@@ -49,24 +46,9 @@ export function EditMarbleManifestForm({ manifest }: Props) {
                                     onSubmit={handleSubmit}
                                     noValidate
                                 >
-                                    <FormControl
-                                        inputId="key_name"
-                                        label="Name"
-                                        errors="err"
-                                        required
-                                    >
-                                        <Field
-                                            as={Input}
-                                            name="name"
-                                            id="key_name"
-                                            required
-                                            placeholder="e.g. super coordinator"
-                                            data-cy="team-teamNameInput"
-                                        />
-                                    </FormControl>
+                                    <label>Hallo</label>
 
-
-                                {/* Buttons */}
+                                    {/* Buttons */}
                                     <div className="form-group">
                                         <div className="col-sm-12">
                                             <LoadingButton
@@ -74,7 +56,17 @@ export function EditMarbleManifestForm({ manifest }: Props) {
                                                 data-cy="team-createTeamButton"
                                                 isLoading={isSubmitting}
                                                 loadingText="Building coordinator image, this may take a while..."
-                                                // onClick={() => handleBuildClick(values)}
+                                                type='button'
+                                                onClick={() => test()}
+                                            >
+                                                TEST
+                                            </LoadingButton>
+                                            <LoadingButton
+                                                disabled={!isValid}
+                                                data-cy="team-createTeamButton"
+                                                isLoading={isSubmitting}
+                                                loadingText="Building coordinator image, this may take a while..."
+                                            // onClick={() => handleBuildClick(values)}
                                             >
                                                 Update Manifest
                                             </LoadingButton>
@@ -89,8 +81,21 @@ export function EditMarbleManifestForm({ manifest }: Props) {
         </div >
     );
 
+    async function test() {
+        //add package
+        manifest.Packages["addedPackage"] = {
+            UniqueID: "123"
+        }
+
+        manifest.Marbles["addedMarble"] = {
+            test: "test"
+        }
+        console.log("TEST")
+        return null;
+    }
+
     async function handleBuild(values: any) {
-        console.log(values.manifest)
+        console.log(manifest)
         return null;
     }
 
