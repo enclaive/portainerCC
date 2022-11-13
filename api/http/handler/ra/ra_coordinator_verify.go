@@ -2,6 +2,7 @@ package ra
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
@@ -9,7 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"time"
 
 	"github.com/edgelesssys/ego/eclient"
 	httperror "github.com/portainer/libhttp/error"
@@ -50,58 +53,32 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(environmentID))
 	endpointUrl, err := url.ParseURL(endpoint.URL)
-	// config, err := crypto.CreateTLSConfigurationFromDisk(endpoint.TLSConfig.TLSCACertPath, endpoint.TLSConfig.TLSCertPath, endpoint.TLSConfig.TLSKeyPath, endpoint.TLSConfig.TLSSkipVerify)
-	// if err != nil {
-	// 	return httperror.InternalServerError("", err)
-	// }
 
 	endpointUrl.Scheme = "https"
 
-	// https://forfuncsake.github.io/post/2017/08/trust-extra-ca-cert-in-go-app/
-	// Get the SystemCertPool, continue with an empty pool on error
-	// localCertFile := "/coordinator/root.cert"
-	// rootCAs, _ := x509.SystemCertPool()
-	// if rootCAs == nil {
-	// 	rootCAs = x509.NewCertPool()
-
-	// }
-
-	// Read in the cert file
-	// certs, err := ioutil.ReadFile(localCertFile)
-	// if err != nil {
-	// 	return httperror.InternalServerError("failed to apply coordinator root certificate", err)
-	// }
-
-	// Append our cert to the system pool
-	// if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-	// 	fmt.Println("No certs appended, using system certs only")
-	// }
-
-	// Trust the augmented cert pool in our client
 	config := &tls.Config{
 		InsecureSkipVerify: true,
 	}
 	tr := &http.Transport{TLSClientConfig: config}
-	// client := &http.Client{Transport: tr}
 
+	// create custom tcp transport
 	log.Info().Msg("hello coordinator")
 	client := client.NewHTTPClient()
 	client.Transport = tr
-	// dialer := &net.Dialer{
-	// 	Timeout:   30 * time.Second,
-	// 	KeepAlive: 30 * time.Second,
-	// 	// DualStack: true, // this is deprecated as of go 1.16
-	// }
-	// or create your own transport, there's an example on godoc.
-	// tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-	// 	log.Info().Msg(endpointUrl.Host)
-	// 	if addr == "coordinator:9001" {
-	// 		log.Info().Msg("Hey im another address!!!")
-	// 		addr = "endpointUrl.Host"
-	// 	}
-	// 	return dialer.DialContext(ctx, network, addr)
-	// }
-	resp, err := client.Get("https://20.169.251.207:4433/quote")
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
+	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		log.Info().Msg(endpointUrl.Host)
+		if addr == "coordinator:9001" {
+			log.Info().Msg("Ich bin eine andere Adresse")
+			addr = endpointUrl.Host
+		}
+		return dialer.DialContext(ctx, network, addr)
+	}
+	resp, err := client.Get("https://coordinator:9001/quote")
 	if err != nil {
 		log.Err(err)
 	}
@@ -116,6 +93,7 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	quoteData := gjson.GetBytes(body, "data")
 	err = json.Unmarshal([]byte(quoteData.String()), &certQuoteData)
 
+	// decode root certificate
 	// https://github.com/edgelesssys/era/blob/master/era/era.go
 	var certs []*pem.Block
 	block, rest := pem.Decode([]byte(certQuoteData.Cert))
@@ -137,6 +115,7 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 
 	coordinatorDeployment.RootCert = *rootCert
 
+	// verify Quote
 	report, err := eclient.VerifyRemoteReport(certQuoteData.Quote)
 	if err != nil {
 		return httperror.InternalServerError("could not verify remote report", err)
@@ -144,7 +123,7 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	log.Info().Msg("Data: " + string(certQuoteData.Quote))
 	log.Info().Msg("Report: " + string(report.Data))
 
-	coordinator, err := handler.DataStore.Coordinator().Coordinator(portainer.CoordinatorID(1))
+	coordinator, err := handler.DataStore.Coordinator().Coordinator(portainer.CoordinatorID(coordinatorDeployment.CoordinatorID))
 	if err != nil {
 		return httperror.InternalServerError("could not fetch coordinator from db", err)
 	}
@@ -165,6 +144,8 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	}
 
 	coordinatorDeployment.Verified = true
+
+	// update coordinatorDeployment in DB
 	err = handler.DataStore.CoordinatorDeployment().Update(coordinatorDeployment.ID, coordinatorDeployment)
 	if err != nil {
 		return httperror.InternalServerError("could not update coordinator deployment in db", err)
