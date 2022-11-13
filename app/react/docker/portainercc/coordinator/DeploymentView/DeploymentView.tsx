@@ -76,7 +76,7 @@ export function CoordinatorDeploymentView() {
 
     const coordintaorQuery = useCoordinatorImages();
 
-    let title = "Coordinator deployment";
+    let title = "Environment Coordinator";
 
     if (!coordintaorQuery.data) {
         return null;

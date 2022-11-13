@@ -18,6 +18,16 @@ export function ContainerStatus({ containers }: Props) {
       <div>
         <div className="vertical-center space-right pr-5">
           <Icon
+            icon="shield"
+            className={clsx('icon icon-sm icon-success')}
+            feather
+          />
+          {runningContainersFilter(containers)} as verified Marble
+        </div>
+      </div>
+      <div>
+        <div className="vertical-center space-right pr-5">
+          <Icon
             icon="power"
             className={clsx('icon icon-sm icon-success')}
             feather

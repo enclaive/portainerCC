@@ -34,7 +34,7 @@ type DecoratedDockerContainer = {
   StatusText: string;
   Image: string;
   Gpus: string;
-  Confidential: { signed: boolean, runningAsMarble: boolean }
+  Confidential: { confImageId: number, signed: boolean, runningAsMarble: boolean }
 };
 
 export type DockerContainer = DecoratedDockerContainer &

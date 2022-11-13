@@ -5,7 +5,6 @@ import { Widget } from '@@/Widget';
 import { Input } from '@@/form-components/Input';
 import { LoadingButton } from '@@/buttons/LoadingButton';
 
-import { FormValues } from '@/react/portainer/portainercc/coordinator/ListView/BuildCoordinatorForm/types'
 import { MarbleManifest } from '../types';
 
 interface Props {
@@ -16,8 +15,8 @@ export function EditMarbleManifestForm({ manifest }: Props) {
     let title = "Edit your manifest file"
 
     const initialValues = {
+        manifest: { Packages: {}, Marbles: {}},
         name: '',
-        key: 0
     }
 
 
@@ -50,8 +49,6 @@ export function EditMarbleManifestForm({ manifest }: Props) {
                                     onSubmit={handleSubmit}
                                     noValidate
                                 >
-
-                                
                                     <FormControl
                                         inputId="key_name"
                                         label="Name"
@@ -92,7 +89,8 @@ export function EditMarbleManifestForm({ manifest }: Props) {
         </div >
     );
 
-    async function handleBuild(values: FormValues) {
+    async function handleBuild(values: any) {
+        console.log(values.manifest)
         return null;
     }
 

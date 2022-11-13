@@ -16,20 +16,20 @@ export function CoordinatorStatus() {
       <div>
         <div className="vertical-center space-right pr-5">
           <Icon
-            icon="shield"
+            icon="lock"
             className={clsx('icon icon-sm icon-success')}
             feather
           />
           Verified
         </div>
-        <div className="vertical-center space-right">
+        {/* <div className="vertical-center space-right">
           <Icon
-            icon="shield"
+            icon="lock"
             className={clsx('icon icon-sm icon-danger')}
             feather
           />
           Not verified
-        </div>
+        </div> */}
       </div>
     </div>
   );
