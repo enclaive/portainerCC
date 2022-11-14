@@ -7,9 +7,12 @@ COPY . /coordinator
 WORKDIR /coordinator/build
 RUN cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 # RUN --mount=type=secret,id=signingkey,dst=/coordinator/build/private.pem,required=true make sign-coordinator coordinator-noenclave
-RUN echo "$signingkey" > /coordinator/build/private.pem
+RUN echo "$signingkey" > /coordinator/private.pem \
+    && echo "$signingkey" > /coordinator/build/private.pem
+    
+RUN  make -j coordinator-noenclave coordinator-enclave sign-coordinator cli
 
-RUN make -j coordinator-noenclave coordinator-enclave sign-coordinator cli
+# RUN make -j coordinator-noenclave coordinator-enclave sign-coordinator cli
 #COPY ./build/private.pem /coordinator/build/private.pem 
 # RUN cat /coordinator/build/private.pem
 RUN cat ./coordinator-config.json

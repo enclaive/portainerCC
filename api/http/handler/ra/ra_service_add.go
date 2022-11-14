@@ -31,9 +31,11 @@ import (
 type ServiceAddParams struct {
 	EnvironmentID int
 	SignerID      string
+	UniqueID      string
 	ImageID       string
-	// Secrets        []string
-	// SecretPath    []string
+	Env           map[string]string
+	Files         map[string]portainer.File
+	Secrets       map[string]string
 }
 
 func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -41,6 +43,11 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		return httperror.BadRequest("request body malformed", err)
+	}
+
+	for key, value := range params.Secrets {
+		log.Info().Msg(key + ": " + value)
+
 	}
 
 	// get target endpoint
@@ -105,6 +112,28 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		packageName = imageInspect.RepoTags[len(imageInspect.RepoTags)-1]
 	}
 
+	// parse Secrets
+	var manifestSecrets = map[string]portainer.Secret{}
+	var secrets = map[string]map[string]string{}
+	for key, value := range params.Secrets {
+		manifestSecrets[key] = portainer.Secret{
+			Type:        "plain",
+			UserDefined: true,
+		}
+		secrets[key] = make(map[string]string)
+		secrets[key]["Key"] = value
+	}
+
+	params.Files["/dev/attestation/keys/default"] = portainer.File{
+		Data:        "{{ raw .Secrets.app_defaultkey.Private }}",
+		Encoding:    "string",
+		NoTemplates: false,
+	}
+	manifestSecrets["app_defaultkey"] = portainer.Secret{
+		Type: "symmetric-key",
+		Size: 128,
+	}
+
 	if reflect.DeepEqual(coordinatorDeployment.Manifest, manifest) {
 		log.Info().Msg("No manifest")
 
@@ -137,6 +166,9 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		block, _ = pem.Decode(userCertPEM.Bytes())
 		coordinatorDeployment.UserCert = *block
 
+		log.Info().Msg(userCertPEM.String())
+		log.Info().Msg(userCertPrivKeyPEM.String())
+
 		// create coordinator manifest
 		manifest := portainer.CoordinatorManifest{
 			Users: map[string]portainer.CoordinatorUser{
@@ -150,38 +182,51 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 			},
 			Packages: map[string]portainer.PackageProperties{
 				packageName: {
-					SignerID:        "fe2e0fd23973a6128bb7deb2c8d1b6b7973e81365a4930dfebe92fa1ce9a04fe",
-					ProductID:       1,
-					SecurityVersion: 1,
+					UniqueID: params.UniqueID,
+					// ProductID:       1,
+					// SecurityVersion: 1,
 				},
 			},
 			Marbles: map[string]portainer.Marble{
 				"app_marble": {
 					Package: packageName,
 					Parameters: portainer.Parameters{
-						Files: map[string]portainer.File{
-							"/dev/attestation/keys/default": {
-								Data:        "{{ raw .Secrets.app_defaultkey.Private }}",
-								Encoding:    "string",
-								NoTemplates: false,
-							},
-						},
-						Env: map[string]portainer.File{
-							"IS_MARBLE": {
-								Data:        "true",
-								Encoding:    "string",
-								NoTemplates: false,
-							},
+						Files: params.Files,
+						//  map[string]portainer.File{
+						// "/dev/attestation/keys/default": {
+						// 	Data:        "{{ raw .Secrets.app_defaultkey.Private }}",
+						// 	Encoding:    "string",
+						// 	NoTemplates: false,
+						// },
+						// "/app/init.sql": {
+						// 	Data:        "{{ raw .Secrets.init.Private }}",
+						// 	Encoding:    "string",
+						// 	NoTemplates: false,
+						// },
+						// },
+						Env: params.Env,
+						Argv: []string{
+							"/app/mariadbd",
+							"--init-file=/app/init.sql",
 						},
 					},
 				},
 			},
-			Secrets: map[string]portainer.Secret{
-				"app_defaultkey": {
-					Type: "symmetric-key",
-					Size: 128,
-				},
-			},
+			Secrets: manifestSecrets,
+			// map[string]portainer.Secret{
+			// 	"app_defaultkey": {
+			// 		Type: "symmetric-key",
+			// 		Size: 128,
+			// 	},
+			// "password": {
+			// 	Type:        "plain",
+			// 	UserDefined: true,
+			// },
+			// 	"init": {
+			// 		Type:        "plain",
+			// 		UserDefined: true,
+			// 	},
+			// },
 			Roles: map[string]portainer.CoordinatorRole{
 				"updatePackage": {
 					ResourceType: "Packages",
@@ -199,6 +244,7 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		}
 
 		jsonManifest, err := json.Marshal(manifest)
+		log.Info().Msg(string(jsonManifest))
 
 		// add coordinator manifest to db
 		coordinatorDeployment.Manifest = manifest
@@ -249,7 +295,38 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		if err != nil {
 			log.Err(err)
 		}
-		return response.JSON(w, string(body))
+		log.Info().Msg(string(body))
+
+		// create secrets
+		secretsBody := secrets
+		// map[string]map[string]string{
+		// 	"init": {
+		// 		"Key": "Q1JFQVRFIE9SIFJFUExBQ0UgVVNFUiByb290IElERU5USUZJRUQgQlkgJ3Jvb3QnOwoJCQkJR1JBTlQgQUxMIE9OICouKiBUTyByb290IFdJVEggR1JBTlQgT1BUSU9OOw==",
+		// 	},
+		// }
+
+		secretsBodyJson, err := json.Marshal(secretsBody)
+
+		cert, _ := tls.X509KeyPair(userCertPEM.Bytes(), userCertPrivKeyPEM.Bytes())
+
+		tlsConfig = &tls.Config{
+			RootCAs:      rootCAs,
+			Certificates: []tls.Certificate{cert},
+		}
+
+		client = CreateCustomClient(rootCAs, endpointUrl.Host, tlsConfig)
+
+		// send secrets to coordinator
+		secretsResp, err := client.Post("https://coordinator:9001/secrets", "application/json", bytes.NewReader(secretsBodyJson))
+		if err != nil {
+			return httperror.InternalServerError("Could not set secrets", err)
+		}
+		secretsResponseBody, err := ioutil.ReadAll(secretsResp.Body)
+		log.Info().Msg(string(secretsResponseBody))
+
+		defer secretsResp.Body.Close()
+
+		return response.JSON(w, string(secretsResponseBody))
 
 	} else {
 
@@ -257,9 +334,9 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		manifest := portainer.CoordinatorManifest{
 			Packages: map[string]portainer.PackageProperties{
 				packageName: {
-					SignerID:        "fe2e0fd23973a6128bb7deb2c8d1b6b7973e81365a4930dfebe92fa1ce9a04fe",
-					ProductID:       1,
-					SecurityVersion: 1,
+					UniqueID: params.UniqueID,
+					// ProductID:       1,
+					// SecurityVersion: 1,
 				},
 			},
 			Marbles: map[string]portainer.Marble{
@@ -273,13 +350,7 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 								NoTemplates: false,
 							},
 						},
-						Env: map[string]portainer.File{
-							"IS_MARBLE": {
-								Data:        "true",
-								Encoding:    "string",
-								NoTemplates: false,
-							},
-						},
+						Env: params.Env,
 					},
 				},
 			},
@@ -341,6 +412,8 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		if err != nil {
 			log.Err(err)
 		}
+
+		// TODO add update to manifest in DB
 
 		return response.JSON(w, string(body))
 	}

@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -198,8 +197,8 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 	}
 
 	targetClient.Close()
-	log.Info().Msg("CoordinatorID: " + strconv.FormatInt(int64(params.CoordinatorID), 10))
-	log.Info().Msg("EnvironmentID: " + strconv.FormatInt(int64(params.EnvironmentID), 10))
+	// log.Info().Msg("CoordinatorID: " + strconv.FormatInt(int64(params.CoordinatorID), 10))
+	// log.Info().Msg("EnvironmentID: " + strconv.FormatInt(int64(params.EnvironmentID), 10))
 
 	// new coordinatorDeployment Object
 	coordinatorDeployment := &portainer.CoordinatorDeployment{
@@ -208,8 +207,8 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 		Verified:      false,
 	}
 
-	log.Info().Msg("CoordinatorID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.CoordinatorID), 10))
-	log.Info().Msg("EnvironmentID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.EndpointID), 10))
+	// log.Info().Msg("CoordinatorID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.CoordinatorID), 10))
+	// log.Info().Msg("EnvironmentID Deployment: " + strconv.FormatInt(int64(coordinatorDeployment.EndpointID), 10))
 
 	// check if a coordinatorDeployment already exists for endpoint and if so, delete it
 	deployments, err := handler.DataStore.CoordinatorDeployment().CoordinatorDeployments()
