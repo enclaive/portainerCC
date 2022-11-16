@@ -185,9 +185,9 @@ type (
 	CoordinatorManifest struct {
 		Packages map[string]PackageProperties `json:"Packages"`
 		Marbles  map[string]Marble            `json:"Marbles"`
-		Secrets  map[string]Secret            `json:"Secrets"`
-		Users    map[string]CoordinatorUser   `json:"Users"`
-		Roles    map[string]CoordinatorRole   `json:"Roles"`
+		Secrets  map[string]Secret            `json:"Secrets,omitempty"`
+		Users    map[string]CoordinatorUser   `json:"Users,omitempty"`
+		Roles    map[string]CoordinatorRole   `json:"Roles,omitempty"`
 	}
 
 	PackageProperties struct {

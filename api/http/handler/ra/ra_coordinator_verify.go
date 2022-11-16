@@ -30,6 +30,7 @@ type certQuoteResp struct {
 	Quote []byte
 }
 
+// verifies the quote of a running coordinator
 func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	environmentID, err := request.RetrieveNumericRouteVariableValue(r, "id")
 	if err != nil {
