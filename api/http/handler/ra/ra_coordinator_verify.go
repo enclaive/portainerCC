@@ -30,6 +30,7 @@ type certQuoteResp struct {
 	Quote []byte
 }
 
+// verifies the quote of a running coordinator
 func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	environmentID, err := request.RetrieveNumericRouteVariableValue(r, "id")
 	if err != nil {
@@ -120,8 +121,8 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return httperror.InternalServerError("could not verify remote report", err)
 	}
-	log.Info().Msg("Data: " + string(certQuoteData.Quote))
-	log.Info().Msg("Report: " + string(report.Data))
+	// log.Info().Msg("Data: " + string(certQuoteData.Quote))
+	// log.Info().Msg("Report: " + string(report.Data))
 
 	coordinator, err := handler.DataStore.Coordinator().Coordinator(portainer.CoordinatorID(coordinatorDeployment.CoordinatorID))
 	if err != nil {

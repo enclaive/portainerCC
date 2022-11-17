@@ -16,7 +16,6 @@ import (
 	"net"
 	"net/http"
 	"reflect"
-	"strconv"
 	"time"
 
 	httperror "github.com/portainer/libhttp/error"
@@ -30,18 +29,24 @@ import (
 
 type ServiceAddParams struct {
 	EnvironmentID int
-	SignerID      string
-	ImageID       string
-	// Secrets        []string
-	// SecretPath    []string
+	Name          string
+	UniqueID      string
+	Username      string
+	Password      string
 }
 
+// Adds a new service to the manifest of a running coordinator
 func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	var params ServiceAddParams
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		return httperror.BadRequest("request body malformed", err)
 	}
+
+	// for key, value := range params.Secrets {
+	// 	log.Info().Msg(key + ": " + value)
+
+	// }
 
 	// get target endpoint
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(params.EnvironmentID))
@@ -62,28 +67,6 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		}
 	}
 
-	// create docker API client
-	localClient, err := handler.dockerClientFactory.CreateClient(&localEndpoint, "", nil)
-	if err != nil {
-		log.Err(err)
-		// panic(err)
-	}
-
-	_, err = localClient.Ping(r.Context())
-	if err != nil {
-		return httperror.InternalServerError("Could not ping docker env", err)
-	}
-
-	imageInspect, _, err := localClient.ImageInspectWithRaw(r.Context(), params.ImageID)
-	if err != nil {
-		return httperror.InternalServerError("Could not fetch image information", err)
-	}
-
-	for index, tag := range imageInspect.RepoTags {
-		log.Info().Msg(strconv.FormatInt(int64(index), 10) + " " + tag)
-	}
-	log.Info().Msg("length of tags: " + strconv.FormatInt(int64(len(imageInspect.RepoTags)), 10))
-
 	// check if coordinator already has a manifest
 	coordinatorDeployments, err := handler.DataStore.CoordinatorDeployment().CoordinatorDeployments()
 	if err != nil {
@@ -97,16 +80,42 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 	}
 	var manifest portainer.CoordinatorManifest = portainer.CoordinatorManifest{}
 
-	// name of the package in manifest
-	var packageName string
-	if len(imageInspect.RepoTags) == 1 {
-		packageName = imageInspect.RepoTags[0]
-	} else {
-		packageName = imageInspect.RepoTags[len(imageInspect.RepoTags)-1]
-	}
+	// // parse Secrets
+	// var manifestSecrets = map[string]portainer.Secret{}
+	// var secrets = map[string]map[string]string{}
 
+	// if !reflect.DeepEqual(params.Secrets, map[string]string{}) {
+	// 	for key, value := range params.Secrets {
+	// 		manifestSecrets[key] = portainer.Secret{
+	// 			Type:        "plain",
+	// 			UserDefined: true,
+	// 		}
+	// 		secrets[key] = make(map[string]string)
+	// 		secrets[key]["Key"] = value
+	// 	}
+	// }
+
+	// files := make(map[string]portainer.File)
+	// if !reflect.DeepEqual(params.Files, map[string]portainer.File{}) {
+	// 	files = params.Files
+	// }
+
+	// // add default attestation key as file (needs to be done to make secret provisioning for mariadb possible)
+	// files["/dev/attestation/keys/default"] = portainer.File{
+	// 	Data:        "{{ raw .Secrets.app_defaultkey.Private }}",
+	// 	Encoding:    "string",
+	// 	NoTemplates: false,
+	// }
+
+	// if coordinator has no manifest, create an initial manifest with the requested Marbles and secrets, if coordinator already has a manifest, create an update manifest
 	if reflect.DeepEqual(coordinatorDeployment.Manifest, manifest) {
 		log.Info().Msg("No manifest")
+
+		// // add default attestation key as secret (needs to be done to make secret provisioning for mariadb possible)
+		// manifestSecrets["app_defaultkey"] = portainer.Secret{
+		// 	Type: "symmetric-key",
+		// 	Size: 128,
+		// }
 
 		//create User certificate
 		userCertPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
@@ -137,68 +146,82 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		block, _ = pem.Decode(userCertPEM.Bytes())
 		coordinatorDeployment.UserCert = *block
 
+		log.Info().Msg(userCertPEM.String())
+		log.Info().Msg(userCertPrivKeyPEM.String())
+
 		// create coordinator manifest
-		manifest := portainer.CoordinatorManifest{
-			Users: map[string]portainer.CoordinatorUser{
-				"portainer": {
-					Certificate: userCertPEM.String(),
-					Roles: []string{
-						"updatePackage",
-						"secretManager",
-					},
+		manifest, secrets := createManifestMariadb(params.UniqueID, params.Username, params.Password, params.Name, true)
+		manifest.Users = map[string]portainer.CoordinatorUser{
+			"portainer": {
+				Certificate: userCertPEM.String(),
+				Roles: []string{
+					"updatePackage",
+					"secretManager",
 				},
+			}}
+		manifest.Roles = map[string]portainer.CoordinatorRole{
+			"updatePackage": {
+				ResourceType: "Packages",
+				Actions:      []string{"UpdateSecurityVersion"},
 			},
-			Packages: map[string]portainer.PackageProperties{
-				packageName: {
-					SignerID:        "fe2e0fd23973a6128bb7deb2c8d1b6b7973e81365a4930dfebe92fa1ce9a04fe",
-					ProductID:       1,
-					SecurityVersion: 1,
-				},
-			},
-			Marbles: map[string]portainer.Marble{
-				"app_marble": {
-					Package: packageName,
-					Parameters: portainer.Parameters{
-						Files: map[string]portainer.File{
-							"/dev/attestation/keys/default": {
-								Data:        "{{ raw .Secrets.app_defaultkey.Private }}",
-								Encoding:    "string",
-								NoTemplates: false,
-							},
-						},
-						Env: map[string]portainer.File{
-							"IS_MARBLE": {
-								Data:        "true",
-								Encoding:    "string",
-								NoTemplates: false,
-							},
-						},
-					},
-				},
-			},
-			Secrets: map[string]portainer.Secret{
-				"app_defaultkey": {
-					Type: "symmetric-key",
-					Size: 128,
-				},
-			},
-			Roles: map[string]portainer.CoordinatorRole{
-				"updatePackage": {
-					ResourceType: "Packages",
-					Actions:      []string{"UpdateSecurityVersion"},
-				},
-				"secretManager": {
-					ResourceType:  "Secrets",
-					ResourceNames: []string{},
-					Actions: []string{
-						"ReadSecret",
-						"WriteSecret",
-					},
+			"secretManager": {
+				ResourceType:  "Secrets",
+				ResourceNames: []string{},
+				Actions: []string{
+					"ReadSecret",
+					"WriteSecret",
 				},
 			},
 		}
+		// manifest := portainer.CoordinatorManifest{
+		// 	Users: map[string]portainer.CoordinatorUser{
+		// 		"portainer": {
+		// 			Certificate: userCertPEM.String(),
+		// 			Roles: []string{
+		// 				"updatePackage",
+		// 				"secretManager",
+		// 			},
+		// 		},
+		// 	},
+		// 	Packages: map[string]portainer.PackageProperties{
+		// 		params.Name: {
+		// 			UniqueID: params.UniqueID,
+		// 			// ProductID:       1,
+		// 			// SecurityVersion: 1,
+		// 		},
+		// 	},
+		// 	Marbles: map[string]portainer.Marble{
+		// 		params.Name + "_marble": {
+		// 			Package: params.Name,
+		// 			Parameters: portainer.Parameters{
+		// 				Files: files,
+		// 				Env:   params.Env,
+		// 				Argv: []string{
+		// 					"/app/mariadbd",
+		// 					"--init-file=/app/init.sql",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	Secrets: manifestSecrets,
+		// 	Roles: map[string]portainer.CoordinatorRole{
+		// 		"updatePackage": {
+		// 			ResourceType: "Packages",
+		// 			Actions:      []string{"UpdateSecurityVersion"},
+		// 		},
+		// 		"secretManager": {
+		// 			ResourceType:  "Secrets",
+		// 			ResourceNames: []string{},
+		// 			Actions: []string{
+		// 				"ReadSecret",
+		// 				"WriteSecret",
+		// 			},
+		// 		},
+		// 	},
+		// }
 
 		jsonManifest, err := json.Marshal(manifest)
+		log.Info().Msg(string(jsonManifest))
 
 		// add coordinator manifest to db
 		coordinatorDeployment.Manifest = manifest
@@ -249,43 +272,65 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		if err != nil {
 			log.Err(err)
 		}
-		return response.JSON(w, string(body))
+		log.Info().Msg(string(body))
+
+		// create secrets
+		secretsBodyJson, err := json.Marshal(secrets)
+
+		cert, _ := tls.X509KeyPair(userCertPEM.Bytes(), userCertPrivKeyPEM.Bytes())
+
+		tlsConfig = &tls.Config{
+			RootCAs:      rootCAs,
+			Certificates: []tls.Certificate{cert},
+		}
+
+		client = CreateCustomClient(rootCAs, endpointUrl.Host, tlsConfig)
+
+		// send secrets to coordinator
+		secretsResp, err := client.Post("https://coordinator:9001/secrets", "application/json", bytes.NewReader(secretsBodyJson))
+		if err != nil {
+			return httperror.InternalServerError("Could not set secrets", err)
+		}
+		secretsResponseBody, err := ioutil.ReadAll(secretsResp.Body)
+		log.Info().Msg(string(secretsResponseBody))
+
+		defer secretsResp.Body.Close()
+		return response.JSON(w, http.StatusOK)
 
 	} else {
 
+		// packages := coordinatorDeployment.Manifest.Packages
+		// packages[params.Name] = portainer.PackageProperties{
+		// 	UniqueID: params.UniqueID,
+		// 	// ProductID:       1,
+		// 	// SecurityVersion: 1,
+		// }
+
 		// create update manifest
-		manifest := portainer.CoordinatorManifest{
-			Packages: map[string]portainer.PackageProperties{
-				packageName: {
-					SignerID:        "fe2e0fd23973a6128bb7deb2c8d1b6b7973e81365a4930dfebe92fa1ce9a04fe",
-					ProductID:       1,
-					SecurityVersion: 1,
-				},
-			},
-			Marbles: map[string]portainer.Marble{
-				"app_marble": {
-					Package: packageName,
-					Parameters: portainer.Parameters{
-						Files: map[string]portainer.File{
-							"/dev/attestation/keys/default": {
-								Data:        "{{ raw .Secrets.app_defaultkey.Private }}",
-								Encoding:    "string",
-								NoTemplates: false,
-							},
-						},
-						Env: map[string]portainer.File{
-							"IS_MARBLE": {
-								Data:        "true",
-								Encoding:    "string",
-								NoTemplates: false,
-							},
-						},
-					},
-				},
-			},
-		}
+		manifest, secrets := createManifestMariadb(params.UniqueID, params.Username, params.Password, params.Name, false)
+		// manifest := portainer.CoordinatorManifest{
+		// 	Packages: packages,
+		// 	Marbles: map[string]portainer.Marble{
+		// 		params.Name + "_marble": {
+		// 			Package: params.Name,
+		// 			Parameters: portainer.Parameters{
+		// 				Files: files,
+		// 				Env:   params.Env,
+		// 				Argv: []string{
+		// 					"/app/mariadbd",
+		// 					"--init-file=/app/init.sql",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	Secrets: manifestSecrets,
+		// }
 
 		jsonManifest, err := json.Marshal(manifest)
+		if err != nil {
+			return httperror.InternalServerError("Could not marshal manifest", err)
+		}
+		log.Info().Msg(string(jsonManifest))
 
 		// https://forfuncsake.github.io/post/2017/08/trust-extra-ca-cert-in-go-app/
 		// Get the SystemCertPool, continue with an empty pool on error
@@ -341,12 +386,43 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		if err != nil {
 			log.Err(err)
 		}
+		log.Info().Msg(string(body))
 
-		return response.JSON(w, string(body))
+		// create secrets
+		secretsBodyJson, err := json.Marshal(secrets)
+
+		tlsConfig = &tls.Config{
+			RootCAs:      rootCAs,
+			Certificates: []tls.Certificate{cert},
+		}
+
+		client = CreateCustomClient(rootCAs, endpointUrl.Host, tlsConfig)
+
+		// send secrets to coordinator
+		secretsResp, err := client.Post("https://coordinator:9001/secrets", "application/json", bytes.NewReader(secretsBodyJson))
+		if err != nil {
+			return httperror.InternalServerError("Could not set secrets", err)
+		}
+		secretsResponseBody, err := ioutil.ReadAll(secretsResp.Body)
+		log.Info().Msg(string(secretsResponseBody))
+
+		defer secretsResp.Body.Close()
+
+		// add update to manifest in DB
+		coordinatorDeployment.Manifest.Packages[params.Name] = manifest.Packages[params.Name]
+		coordinatorDeployment.Manifest.Marbles[params.Name+"_marble"] = manifest.Marbles[params.Name+"_marble"]
+
+		for key, value := range manifest.Secrets {
+			coordinatorDeployment.Manifest.Secrets[key] = value
+		}
+
+		err = handler.DataStore.CoordinatorDeployment().Update(coordinatorDeployment.ID, &coordinatorDeployment)
+		if err != nil {
+			return httperror.InternalServerError("Could not update manifest in DB", err)
+		}
+		return response.JSON(w, http.StatusOK)
 	}
-	// TODO if no manifest present, create x.509 certificate, create manifest from request params and user, post it and save cert and key to db
 
-	// TODO if manifest present, build update manifest from request params, get user cert and key from db and post update manifest
 }
 
 func CreateUserCert(key *rsa.PrivateKey) ([]byte, error) {

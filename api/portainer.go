@@ -185,15 +185,16 @@ type (
 	CoordinatorManifest struct {
 		Packages map[string]PackageProperties `json:"Packages"`
 		Marbles  map[string]Marble            `json:"Marbles"`
-		Secrets  map[string]Secret            `json:"Secrets"`
-		Users    map[string]CoordinatorUser   `json:"Users"`
-		Roles    map[string]CoordinatorRole   `json:"Roles"`
+		Secrets  map[string]Secret            `json:"Secrets,omitempty"`
+		Users    map[string]CoordinatorUser   `json:"Users,omitempty"`
+		Roles    map[string]CoordinatorRole   `json:"Roles,omitempty"`
 	}
 
 	PackageProperties struct {
-		SignerID        string `json:"SignerID"`
-		ProductID       int    `json:"ProductID"`
-		SecurityVersion int    `json:"SecurityVersion"`
+		SignerID        string `json:"SignerID,omitempty"`
+		ProductID       int    `json:"ProductID,omitempty"`
+		SecurityVersion int    `json:"SecurityVersion,omitempty"`
+		UniqueID        string `json:"UniqueID,omitempty"`
 	}
 
 	Secret struct {
@@ -208,9 +209,9 @@ type (
 	}
 
 	Parameters struct {
-		Files map[string]File `json:"Files"`
-		Env   map[string]File `json:"Env"`
-		Argv  []string        `json:"Argv"`
+		Files map[string]File   `json:"Files"`
+		Env   map[string]string `json:"Env"`
+		Argv  []string          `json:"Argv"`
 	}
 
 	File struct {
