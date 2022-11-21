@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 
 	portainer "github.com/portainer/portainer/api"
-	"github.com/rs/zerolog/log"
 )
 
 func createManifestMariadb(uniqueID, username, password, name string, initial bool) (portainer.CoordinatorManifest, map[string]map[string]string) {
@@ -53,9 +52,7 @@ func createManifestMariadb(uniqueID, username, password, name string, initial bo
 	}
 
 	secretData := "CREATE OR REPLACE USER " + username + " IDENTIFIED BY '" + password + "';\n GRANT ALL PRIVILEGES ON *.* TO " + username + ";"
-	log.Info().Msg(secretData)
 	secretBase64 := base64.StdEncoding.EncodeToString([]byte(secretData))
-	log.Info().Msg(secretBase64)
 
 	secretMap := map[string]map[string]string{}
 	secretMap["init"] = make(map[string]string)

@@ -43,11 +43,6 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		return httperror.BadRequest("request body malformed", err)
 	}
 
-	// for key, value := range params.Secrets {
-	// 	log.Info().Msg(key + ": " + value)
-
-	// }
-
 	// get target endpoint
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(params.EnvironmentID))
 	if err != nil {
@@ -80,42 +75,9 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 	}
 	var manifest portainer.CoordinatorManifest = portainer.CoordinatorManifest{}
 
-	// // parse Secrets
-	// var manifestSecrets = map[string]portainer.Secret{}
-	// var secrets = map[string]map[string]string{}
-
-	// if !reflect.DeepEqual(params.Secrets, map[string]string{}) {
-	// 	for key, value := range params.Secrets {
-	// 		manifestSecrets[key] = portainer.Secret{
-	// 			Type:        "plain",
-	// 			UserDefined: true,
-	// 		}
-	// 		secrets[key] = make(map[string]string)
-	// 		secrets[key]["Key"] = value
-	// 	}
-	// }
-
-	// files := make(map[string]portainer.File)
-	// if !reflect.DeepEqual(params.Files, map[string]portainer.File{}) {
-	// 	files = params.Files
-	// }
-
-	// // add default attestation key as file (needs to be done to make secret provisioning for mariadb possible)
-	// files["/dev/attestation/keys/default"] = portainer.File{
-	// 	Data:        "{{ raw .Secrets.app_defaultkey.Private }}",
-	// 	Encoding:    "string",
-	// 	NoTemplates: false,
-	// }
-
 	// if coordinator has no manifest, create an initial manifest with the requested Marbles and secrets, if coordinator already has a manifest, create an update manifest
 	if reflect.DeepEqual(coordinatorDeployment.Manifest, manifest) {
 		log.Info().Msg("No manifest")
-
-		// // add default attestation key as secret (needs to be done to make secret provisioning for mariadb possible)
-		// manifestSecrets["app_defaultkey"] = portainer.Secret{
-		// 	Type: "symmetric-key",
-		// 	Size: 128,
-		// }
 
 		//create User certificate
 		userCertPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
@@ -173,52 +135,6 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 				},
 			},
 		}
-		// manifest := portainer.CoordinatorManifest{
-		// 	Users: map[string]portainer.CoordinatorUser{
-		// 		"portainer": {
-		// 			Certificate: userCertPEM.String(),
-		// 			Roles: []string{
-		// 				"updatePackage",
-		// 				"secretManager",
-		// 			},
-		// 		},
-		// 	},
-		// 	Packages: map[string]portainer.PackageProperties{
-		// 		params.Name: {
-		// 			UniqueID: params.UniqueID,
-		// 			// ProductID:       1,
-		// 			// SecurityVersion: 1,
-		// 		},
-		// 	},
-		// 	Marbles: map[string]portainer.Marble{
-		// 		params.Name + "_marble": {
-		// 			Package: params.Name,
-		// 			Parameters: portainer.Parameters{
-		// 				Files: files,
-		// 				Env:   params.Env,
-		// 				Argv: []string{
-		// 					"/app/mariadbd",
-		// 					"--init-file=/app/init.sql",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	Secrets: manifestSecrets,
-		// 	Roles: map[string]portainer.CoordinatorRole{
-		// 		"updatePackage": {
-		// 			ResourceType: "Packages",
-		// 			Actions:      []string{"UpdateSecurityVersion"},
-		// 		},
-		// 		"secretManager": {
-		// 			ResourceType:  "Secrets",
-		// 			ResourceNames: []string{},
-		// 			Actions: []string{
-		// 				"ReadSecret",
-		// 				"WriteSecret",
-		// 			},
-		// 		},
-		// 	},
-		// }
 
 		jsonManifest, err := json.Marshal(manifest)
 		log.Info().Msg(string(jsonManifest))
@@ -299,32 +215,8 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 
 	} else {
 
-		// packages := coordinatorDeployment.Manifest.Packages
-		// packages[params.Name] = portainer.PackageProperties{
-		// 	UniqueID: params.UniqueID,
-		// 	// ProductID:       1,
-		// 	// SecurityVersion: 1,
-		// }
-
 		// create update manifest
 		manifest, secrets := createManifestMariadb(params.UniqueID, params.Username, params.Password, params.Name, false)
-		// manifest := portainer.CoordinatorManifest{
-		// 	Packages: packages,
-		// 	Marbles: map[string]portainer.Marble{
-		// 		params.Name + "_marble": {
-		// 			Package: params.Name,
-		// 			Parameters: portainer.Parameters{
-		// 				Files: files,
-		// 				Env:   params.Env,
-		// 				Argv: []string{
-		// 					"/app/mariadbd",
-		// 					"--init-file=/app/init.sql",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	Secrets: manifestSecrets,
-		// }
 
 		jsonManifest, err := json.Marshal(manifest)
 		if err != nil {

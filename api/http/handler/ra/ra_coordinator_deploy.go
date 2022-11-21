@@ -52,7 +52,6 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 
 	// get target environment
 	targetEndpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(params.EnvironmentID))
-	log.Info().Msg(targetEndpoint.Name)
 	if err != nil {
 		return httperror.InternalServerError("unable to find requested endpoint", err)
 	}
