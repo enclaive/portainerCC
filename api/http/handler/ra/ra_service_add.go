@@ -30,7 +30,6 @@ import (
 type ServiceAddParams struct {
 	EnvironmentID int
 	Name          string
-	UniqueID      string
 	Username      string
 	Password      string
 }
@@ -112,7 +111,7 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		log.Info().Msg(userCertPrivKeyPEM.String())
 
 		// create coordinator manifest
-		manifest, secrets := createManifestMariadb(params.UniqueID, params.Username, params.Password, params.Name, true)
+		manifest, secrets := createManifestMariadb(params.Username, params.Password, params.Name, true)
 		manifest.Users = map[string]portainer.CoordinatorUser{
 			"portainer": {
 				Certificate: userCertPEM.String(),
@@ -216,7 +215,7 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 	} else {
 
 		// create update manifest
-		manifest, secrets := createManifestMariadb(params.UniqueID, params.Username, params.Password, params.Name, false)
+		manifest, secrets := createManifestMariadb(params.Username, params.Password, params.Name, false)
 
 		jsonManifest, err := json.Marshal(manifest)
 		if err != nil {

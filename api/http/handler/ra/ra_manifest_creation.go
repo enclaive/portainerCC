@@ -6,11 +6,11 @@ import (
 	portainer "github.com/portainer/portainer/api"
 )
 
-func createManifestMariadb(uniqueID, username, password, name string, initial bool) (portainer.CoordinatorManifest, map[string]map[string]string) {
+func createManifestMariadb(username, password, name string, initial bool) (portainer.CoordinatorManifest, map[string]map[string]string) {
 	manifest := portainer.CoordinatorManifest{
 		Packages: map[string]portainer.PackageProperties{
 			name: {
-				UniqueID: uniqueID,
+				UniqueID: "e556b1f4a686be466b24c8d13df07705d5c1b9c8441281b84aec16c3d778521b",
 			},
 		},
 		Marbles: map[string]portainer.Marble{
