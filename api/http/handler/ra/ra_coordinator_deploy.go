@@ -12,7 +12,6 @@ import (
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
 	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/endpointutils"
 	"github.com/rs/zerolog/log"
 )
 
@@ -37,22 +36,8 @@ func (handler *Handler) raCoordinatorDeploy(w http.ResponseWriter, r *http.Reque
 		return httperror.InternalServerError("Could not retrieve coordinator from database", err)
 	}
 
-	// get local docker environment
-	endpoints, err := handler.DataStore.Endpoint().Endpoints()
-	if err != nil {
-		return httperror.InternalServerError("Unable to retrieve environments", err)
-	}
-	var localEndpoint portainer.Endpoint = portainer.Endpoint{}
-	for _, endpoint := range endpoints {
-		if endpointutils.IsLocalEndpoint(&endpoint) {
-			localEndpoint = endpoint
-			log.Info().Msg(localEndpoint.URL)
-		}
-	}
-
 	// get target environment
 	targetEndpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(params.EnvironmentID))
-	log.Info().Msg(targetEndpoint.Name)
 	if err != nil {
 		return httperror.InternalServerError("unable to find requested endpoint", err)
 	}
