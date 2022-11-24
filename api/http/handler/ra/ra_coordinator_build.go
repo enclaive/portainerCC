@@ -60,8 +60,7 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 	// create docker API client
 	client, err := handler.dockerClientFactory.CreateClient(&localEndpoint, "", nil)
 	if err != nil {
-		log.Err(err)
-		// panic(err)
+		return httperror.InternalServerError("could not create docker client", err)
 	}
 
 	// read signing key from db and convert it to pem format
@@ -112,10 +111,6 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 		SigningKeyID: params.SigningKeyId,
 	}
 
-	// print(res.Body)
-	// extract UniqueID and SignerID from Build Logs
-	// scanner := bufio.NewScanner(res.Body)
-
 	var lastLine string
 
 	scanner := bufio.NewScanner(res.Body)
@@ -141,31 +136,6 @@ func (handler *Handler) raCoordinatorBuild(w http.ResponseWriter, r *http.Reques
 			}
 		}
 	}
-
-	// return nil
-
-	// var lastLine string
-	// for scanner.Scan() {
-	// 	lastLine = scanner.Text()
-	// 	if strings.Contains(lastLine, "UniqueID") {
-	// 		split := strings.Split(lastLine, ",")
-	// 		for _, line := range split {
-	// 			fmt.Println(line)
-	// 			if strings.Contains(line, "UniqueID") {
-	// 				uniqueID := strings.Split(line, ":")[1]
-	// 				uniqueID = strings.ReplaceAll(uniqueID, `\"`, "")
-	// 				uniqueID = strings.ReplaceAll(uniqueID, ` `, "")
-	// 				coordinatorObject.UniqueID = uniqueID
-	// 			}
-	// 			if strings.Contains(line, "SignerID") {
-	// 				signerID := strings.Split(line, ":")[1]
-	// 				signerID = strings.ReplaceAll(signerID, `\"`, "")
-	// 				signerID = strings.ReplaceAll(signerID, ` `, "")
-	// 				coordinatorObject.SignerID = signerID
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	//push image
 	authConfig := types.AuthConfig{

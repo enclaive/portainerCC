@@ -63,7 +63,6 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	tr := &http.Transport{TLSClientConfig: config}
 
 	// create custom tcp transport
-	log.Info().Msg("hello coordinator")
 	client := client.NewHTTPClient()
 	client.Transport = tr
 	dialer := &net.Dialer{
@@ -72,9 +71,7 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	}
 
 	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		log.Info().Msg(endpointUrl.Host)
 		if addr == "coordinator:9001" {
-			log.Info().Msg("Ich bin eine andere Adresse")
 			addr = endpointUrl.Host
 		}
 		return dialer.DialContext(ctx, network, addr)
@@ -121,8 +118,6 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return httperror.InternalServerError("could not verify remote report", err)
 	}
-	// log.Info().Msg("Data: " + string(certQuoteData.Quote))
-	// log.Info().Msg("Report: " + string(report.Data))
 
 	coordinator, err := handler.DataStore.Coordinator().Coordinator(portainer.CoordinatorID(coordinatorDeployment.CoordinatorID))
 	if err != nil {
@@ -130,15 +125,11 @@ func (handler *Handler) raCoordinatorVerify(w http.ResponseWriter, r *http.Reque
 	}
 
 	uniqueIdBytes, err := hex.DecodeString(coordinator.UniqueID)
-	log.Info().Msg("uniqueID: " + hex.EncodeToString(report.UniqueID))
-	log.Info().Msg("uniqueID db: " + coordinator.UniqueID)
 	if !bytes.Equal(uniqueIdBytes, report.UniqueID) {
 		return httperror.InternalServerError("coordinators unique id is not matching", errors.New(""))
 	}
 
 	signerIdBytes, err := hex.DecodeString(coordinator.SignerID)
-	log.Info().Msg("signerID: " + hex.EncodeToString(report.SignerID))
-	log.Info().Msg("signerID db: " + coordinator.SignerID)
 
 	if !bytes.Equal(signerIdBytes, report.SignerID) {
 		return httperror.InternalServerError("coordinators signer id is not matching", errors.New(""))
