@@ -21,7 +21,7 @@ export function useColumns(
   return useMemo(
     () =>
       _.compact([
-        confidential,
+        // confidential,
         name,
         state,
         quickActions,

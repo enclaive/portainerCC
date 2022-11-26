@@ -1,9 +1,9 @@
 import { Column } from 'react-table';
 
 
-import { CoordintaorListEntry } from '../../types';
+import { CoordinatorListEntry } from '../../types';
 
-export const imageid: Column<CoordintaorListEntry> = {
+export const imageid: Column<CoordinatorListEntry> = {
   Header: 'ImageID',
   accessor: (row) => row.imageId,
   disableFilters: true,

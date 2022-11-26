@@ -9,13 +9,14 @@ import { Widget } from '@@/Widget';
 import { LoadingButton } from '@@/buttons/LoadingButton';
 import { FormValues } from '@/react/docker/portainercc/confidential-templates/DeploymentView/types'
 import { useEnvironmentId } from '@/portainer/hooks/useEnvironmentId';
+import { addService, deployService } from '../service-deployment.service';
 
 export function ConfidentialTemplatesView() {
 
 
     let title = "Confidential Templates";
 
-    const envId = useEnvironmentId();
+    const envId = Number(useEnvironmentId());
 
     const initialValues = {
         Name: '',
@@ -69,7 +70,7 @@ export function ConfidentialTemplatesView() {
                                                 name="ImageID"
                                                 id="ImageID"
                                                 required
-                                                
+
                                             />
                                         </FormControl>
 
@@ -121,8 +122,7 @@ export function ConfidentialTemplatesView() {
                                                     disabled={!isValid}
                                                     data-cy="team-createTeamButton"
                                                     isLoading={isSubmitting}
-                                                    loadingText="Building coordinator image, this may take a while..."
-                                                // onClick={() => handleBuildClick(values)}
+                                                    loadingText="Adding a confidential service..."
                                                 >
                                                     Add & Deploy Service
                                                 </LoadingButton>
@@ -142,9 +142,12 @@ export function ConfidentialTemplatesView() {
 
 
     async function handleDeployment(values: FormValues) {
-        console.log(envId)
-        console.log(values);
-        return null;
+        console.log("MOIN")
+        const addResult = await addService({ EnvironmentID: envId, Name: values.Name, Username: values.Username, Password: values.Password })
+        console.log(addResult)
+        const deployResult = await deployService({ EnvironmentID: envId, Name: values.Name, ImageID: values.ImageID })
+        console.log(deployResult);
+        return;
     }
 
 }

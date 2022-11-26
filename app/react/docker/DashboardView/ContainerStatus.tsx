@@ -15,7 +15,7 @@ export function useContainerStatusComponent(containers: DockerContainer[]) {
 export function ContainerStatus({ containers }: Props) {
   return (
     <div className="pull-right">
-      <div>
+      {/* <div>
         <div className="vertical-center space-right pr-5">
           <Icon
             icon="shield"
@@ -24,7 +24,7 @@ export function ContainerStatus({ containers }: Props) {
           />
           {runningContainersFilter(containers)} as verified Marble
         </div>
-      </div>
+      </div> */}
       <div>
         <div className="vertical-center space-right pr-5">
           <Icon

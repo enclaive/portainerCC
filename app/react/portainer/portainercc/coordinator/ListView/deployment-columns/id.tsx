@@ -1,9 +1,9 @@
 import { Column } from 'react-table';
 
 
-import { CoordinatorListEntry } from '../../types';
+import { CoordinatorDeploymentEntry } from '../../types';
 
-export const id: Column<CoordinatorListEntry> = {
+export const id: Column<CoordinatorDeploymentEntry> = {
   Header: 'ID',
   accessor: (row) => row.id,
   disableFilters: true,

@@ -8,3 +8,10 @@ export type CoordinatorListEntry = {
     uniqueId: string,
     signerId: string,
 }
+
+export type CoordinatorDeploymentEntry = {
+    id: number,
+    coordinatorId: number,
+    endpointId: number,
+    verified: boolean,
+}

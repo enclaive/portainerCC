@@ -1,9 +1,9 @@
 import { Column } from 'react-table';
 
 
-import { CoordintaorListEntry } from '../../types';
+import { CoordinatorListEntry } from '../../types';
 
-export const signingkeyid: Column<CoordintaorListEntry> = {
+export const signingkeyid: Column<CoordinatorListEntry> = {
   Header: 'SigningKeyID',
   accessor: (row) => row.signingKeyId,
   disableFilters: true,

@@ -4,9 +4,14 @@ import { BuildCoordinatorForm } from './BuildCoordinatorForm/BuildCoordinatorFor
 import { useKeys } from '../../keymanagement/queries';
 import { Datatable } from '@@/datatables';
 import { columns } from './columns';
-import { Codesandbox } from 'react-feather';
+import { deploymentColumns } from './deployment-columns';
+import { Codesandbox, Trash2 } from 'react-feather';
 import { createStore } from '@/react/portainer/environments/update-schedules/ListView/datatable-store';
 import { useCoordinatorImages } from '../queries';
+import { Button } from '@@/buttons';
+import { CoordinatorListEntry } from '../types';
+import { removeCoordinatorImage } from '../coordinator.service';
+import { useCoordinatorDeployments } from '@/react/docker/portainercc/coordinator/queries';
 
 const storageKey = 'portainercc-coordinators';
 const useStore = createStore(storageKey);
@@ -17,10 +22,15 @@ export function CoordinatorImagesListView() {
 
     const keysQuery = useKeys('SIGNING')
     const coordintaorQuery = useCoordinatorImages();
+    const deploymentQuery = useCoordinatorDeployments()
 
-    let title = "Coordinator images";
+    let title = "Coordinator";
 
     if (!coordintaorQuery.data) {
+        return null;
+    }
+
+    if (!deploymentQuery.data) {
         return null;
     }
 
@@ -32,24 +42,61 @@ export function CoordinatorImagesListView() {
                 <BuildCoordinatorForm keys={keysQuery.data} />
             )}
 
-            
+
             <Datatable
                 columns={columns}
                 titleOptions={{
-                    title: title,
+                    title: "Coordinator Images",
                     icon: Codesandbox,
                 }}
-                disableSelect
                 dataset={coordintaorQuery.data}
                 settingsStore={store}
                 storageKey={storageKey}
-                emptyContentLabel="No keys found"
-                // isLoading={listQuery.isLoading}
+                emptyContentLabel="No coordinator images found"
+                isLoading={coordintaorQuery.isLoading}
                 totalCount={coordintaorQuery.data.length}
-            // renderTableActions={(selectedRows) => (
-            //     <TableActions selectedRows={selectedRows} />
-            // )}
+                renderTableActions={(selectedRows) => (
+                    <TableActions selectedRows={selectedRows} />
+                )}
             />
+
+            <Datatable
+                columns={deploymentColumns}
+                titleOptions={{
+                    title: "Deployed Coordinators",
+                    icon: Codesandbox,
+                }}
+                disableSelect
+                dataset={deploymentQuery.data}
+                settingsStore={store}
+                storageKey={storageKey}
+                emptyContentLabel="No keys found"
+                isLoading={deploymentQuery.isLoading}
+                totalCount={deploymentQuery.data.length}
+            />
+
         </>
     );
+}
+
+function TableActions({ selectedRows }: { selectedRows: CoordinatorListEntry[] }) {
+    return (
+        <div>
+            <Button
+                icon={Trash2}
+                color="dangerlight"
+                disabled={selectedRows.length === 0}
+                onClick={() => handleRemove()}
+            >
+                Remove
+            </Button>
+        </div>
+    );
+
+    async function handleRemove() {
+        for await (const row of selectedRows) {
+            await removeCoordinatorImage(row.id)
+        }
+        return;
+    }
 }

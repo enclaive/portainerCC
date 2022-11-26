@@ -10,3 +10,7 @@ export interface Package {
   SecurityVersion?: number
   Debug?: boolean,
 }
+
+export interface FormValues {
+  coordinatorImageId: number;
+}

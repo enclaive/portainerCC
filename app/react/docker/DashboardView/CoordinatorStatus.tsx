@@ -2,34 +2,39 @@ import clsx from 'clsx';
 
 import { Icon } from '@/react/components/Icon';
 
-// interface Props {
-//   containers: DockerContainer[];
-// }
-
-export function useCoordinatorStatusComponent() {
-  return <CoordinatorStatus/>;
+interface Props {
+  verified: boolean;
 }
 
-export function CoordinatorStatus() {
+
+export function useCoordinatorStatusComponent(verified: boolean) {
+  return <CoordinatorStatus verified={verified} />;
+}
+
+export function CoordinatorStatus({ verified }: Props) {
   return (
     <div className="pull-right">
       <div>
-        <div className="vertical-center space-right pr-5">
-          <Icon
-            icon="lock"
-            className={clsx('icon icon-sm icon-success')}
-            feather
-          />
-          Verified
-        </div>
-        {/* <div className="vertical-center space-right">
-          <Icon
-            icon="lock"
-            className={clsx('icon icon-sm icon-danger')}
-            feather
-          />
-          Not verified
-        </div> */}
+        {verified &&
+          <div className="vertical-center space-right">
+            <Icon
+              icon="lock"
+              className={clsx('icon icon-sm icon-success')}
+              feather
+            />
+            Verified
+          </div>
+        }
+        {!verified &&
+          <div className="vertical-center space-right">
+            <Icon
+              icon="lock"
+              className={clsx('icon icon-sm icon-danger')}
+              feather
+            />
+            Not verified
+          </div>
+        }
       </div>
     </div>
   );

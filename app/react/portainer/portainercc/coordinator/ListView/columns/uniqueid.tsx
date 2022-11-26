@@ -1,9 +1,9 @@
 import { Column } from 'react-table';
 
 
-import { CoordintaorListEntry } from '../../types';
+import { CoordinatorListEntry } from '../../types';
 
-export const uniqueid: Column<CoordintaorListEntry> = {
+export const uniqueid: Column<CoordinatorListEntry> = {
   Header: 'UniqueID',
   accessor: (row) => row.uniqueId,
   disableFilters: true,

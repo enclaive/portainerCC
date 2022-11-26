@@ -132,7 +132,7 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
           >
             <SidebarItem
               to="portainer.coordinator-build"
-              label="Coordinator Image"
+              label="Coordinator"
             />
             <SidebarItem
               to="portainer.keymanagement"
@@ -144,10 +144,10 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
               params={{ type: 'FILE_ENC' }}
               label="File Encryption Keys"
             />
-            <SidebarItem
+            {/* <SidebarItem
               to="portainer.confimages"
               label="Confidential Images"
-            />
+            /> */}
           </SidebarItem>
       )}
       {/* portainerCC */}

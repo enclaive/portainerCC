@@ -43,7 +43,6 @@ export function BuildCoordinatorForm({ keys }: Props) {
                         >
                             {({
                                 values,
-                                errors,
                                 handleSubmit,
                                 setFieldValue,
                                 isSubmitting,
@@ -57,7 +56,6 @@ export function BuildCoordinatorForm({ keys }: Props) {
                                     <FormControl
                                         inputId="key_name"
                                         label="Name"
-                                        errors="err"
                                         required
                                     >
                                         <Field
@@ -66,7 +64,6 @@ export function BuildCoordinatorForm({ keys }: Props) {
                                             id="key_name"
                                             required
                                             placeholder="e.g. super coordinator"
-                                            data-cy="team-teamNameInput"
                                         />
                                     </FormControl>
 
@@ -74,7 +71,6 @@ export function BuildCoordinatorForm({ keys }: Props) {
                                     <FormControl
                                         inputId="key"
                                         label="SGX Signign Key"
-                                        errors="err"
                                         required
                                     >
 

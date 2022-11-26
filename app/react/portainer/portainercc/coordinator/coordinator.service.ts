@@ -1,6 +1,6 @@
 import axios, { parseAxiosError } from '@/portainer/services/axios';
 import { KeyId } from '../keymanagement/types';
-import { CoordinatorListEntry } from './types';
+import { CoordinatorImageId, CoordinatorListEntry } from './types';
 
 // export async function getKeys(type: string) {
 //     try {
@@ -25,8 +25,16 @@ import { CoordinatorListEntry } from './types';
 
 export async function buildCoordinator(name: string, keyId: KeyId) {
     try {
-        console.log("hier im axioas")
         const { data } = await axios.post(buildUrl(undefined, "build"), { Name: name, SigningKeyId: keyId });
+        return data;
+    } catch (e) {
+        throw parseAxiosError(e as Error, 'Unable to build coordinator')
+    }
+}
+
+export async function removeCoordinatorImage(id: CoordinatorImageId) {
+    try {
+        const { data } = await axios.delete(buildUrl(id.toString()));
         return data;
     } catch (e) {
         throw parseAxiosError(e as Error, 'Unable to build coordinator')
@@ -35,35 +43,34 @@ export async function buildCoordinator(name: string, keyId: KeyId) {
 
 export async function getCoordinatorImages() {
     try {
-        // CHANGE WHEN LIVE
-        // const { data } = await axios.get<CoordinatorListEntry[]>(buildUrl("list"));
-        // return data;
-        return [
-            {
-                id: 1,
-                name: "moin",
-                imageId: "AF39BBAD222",
-                signingKeyId: 1,
-                uniqueId: "ABC123",
-                signerId: "DEF999"
-            },
-            {
-                id: 2,
-                name: "cool",
-                imageId: "AF39BBAD222",
-                signingKeyId: 1,
-                uniqueId: "ABC123",
-                signerId: "DEF999"
-            },
-            {
-                id: 3,
-                name: "supercoord",
-                imageId: "AF39BBAD222",
-                signingKeyId: 1,
-                uniqueId: "ABC123",
-                signerId: "DEF999"
-            }
-        ]
+        const { data } = await axios.get<CoordinatorListEntry[]>(buildUrl("list"));
+        return data;
+        // return [
+        //     {
+        //         id: 1,
+        //         name: "moin",
+        //         imageId: "AF39BBAD222",
+        //         signingKeyId: 1,
+        //         uniqueId: "ABC123",
+        //         signerId: "DEF999"
+        //     },
+        //     {
+        //         id: 2,
+        //         name: "cool",
+        //         imageId: "AF39BBAD222",
+        //         signingKeyId: 1,
+        //         uniqueId: "ABC123",
+        //         signerId: "DEF999"
+        //     },
+        //     {
+        //         id: 3,
+        //         name: "supercoord",
+        //         imageId: "AF39BBAD222",
+        //         signingKeyId: 1,
+        //         uniqueId: "ABC123",
+        //         signerId: "DEF999"
+        //     }
+        // ]
     } catch (error) {
         throw parseAxiosError(error as Error);
     }
