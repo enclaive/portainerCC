@@ -5,6 +5,7 @@ import { KeyListView } from '@/react/portainer/portainercc/keymanagement';
 import { ConfidentialImagesListView } from '@/react/portainer/portainercc/confidential-images';
 import { CoordinatorImagesListView } from '@/react/portainer/portainercc/coordinator';
 import { CoordinatorDeploymentView } from '@/react/docker/portainercc/coordinator/DeploymentView';
+import { ConfidentialTemplatesView } from '@/react/docker/portainercc/confidential-templates/DeploymentView';
 
 import { r2a } from '@/react-tools/react2angular';
 import { withCurrentUser } from '@/react-tools/withCurrentUser';
@@ -27,6 +28,9 @@ export const portainerCCModule = angular
   ).component(
     'coordinatorDeployment',
     r2a(withUIRouter(withReactQuery(withCurrentUser(CoordinatorDeploymentView))), [])
+  ).component(
+    'confidentialTemplates',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(ConfidentialTemplatesView))), [])
   ).name;
 
 /* @ngInject */
@@ -67,6 +71,16 @@ function config($stateRegistryProvider: StateRegistry) {
     views: {
       'content@': {
         component: 'coordinatorDeployment',
+      },
+    },
+  });
+
+  $stateRegistryProvider.register({
+    name: 'docker.templates.confidential',
+    url: '/confidential',
+    views: {
+      'content@': {
+        component: 'confidentialTemplates',
       },
     },
   });

@@ -104,6 +104,12 @@ export function DockerSidebar({ environmentId, environment }: Props) {
           params={{ endpointId: environmentId }}
           data-cy="dockerSidebar-customTemplates"
         />
+        <SidebarItem
+          label="Confidential Templates"
+          to="docker.templates.confidential"
+          params={{ endpointId: environmentId }}
+          data-cy="dockerSidebar-customTemplates"
+        />
       </SidebarItem>
 
       {areStacksVisible && (
