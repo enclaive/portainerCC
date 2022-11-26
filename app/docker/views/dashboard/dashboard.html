@@ -77,6 +77,9 @@
   </div>
 
   <div class="dashboard-grid mx-4">
+    <a class="no-link" ui-sref="docker.coordinator">
+      <dashboard-item feather-icon="true" icon="'codesandbox'" type="'Coordinator'" value="coordinatorCount" children="coordinatorStatusComponent"></dashboard-item>
+    </a>
     <a class="no-link" ui-sref="docker.stacks" ng-if="showStacks">
       <dashboard-item feather-icon="true" icon="'layers'" type="'Stack'" value="stackCount"></dashboard-item>
     </a>

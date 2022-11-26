@@ -1,0 +1,1 @@
+export { ConfidentialTemplatesView } from './ConfidentialTemplatesView'

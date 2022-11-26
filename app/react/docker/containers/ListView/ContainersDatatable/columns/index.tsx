@@ -12,6 +12,7 @@ import { quickActions } from './quick-actions';
 import { stack } from './stack';
 import { state } from './state';
 import { gpus } from './gpus';
+import { confidential } from './confidential';
 
 export function useColumns(
   isHostColumnVisible: boolean,
@@ -20,6 +21,7 @@ export function useColumns(
   return useMemo(
     () =>
       _.compact([
+        // confidential,
         name,
         state,
         quickActions,

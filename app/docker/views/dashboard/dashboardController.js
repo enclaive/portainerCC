@@ -5,6 +5,9 @@ import { isOfflineEndpoint } from '@/portainer/helpers/endpointHelper';
 import { PortainerEndpointTypes } from 'Portainer/models/endpoint/models';
 import { useContainerStatusComponent } from '@/react/docker/DashboardView/ContainerStatus';
 import { useImagesTotalSizeComponent } from '@/react/docker/DashboardView/ImagesTotalSize';
+import { useCoordinatorStatusComponent } from '@/react/docker/DashboardView/CoordinatorStatus'
+
+import { getCoordinatorDeploymentForEnv } from '@/react/docker/portainercc/coordinator/coordinator.service'
 
 angular.module('portainer.docker').controller('DashboardController', [
   '$scope',
@@ -89,19 +92,28 @@ angular.module('portainer.docker').controller('DashboardController', [
         stacks: StackService.stacks(true, endpointMode.provider === 'DOCKER_SWARM_MODE' && endpointMode.role === 'MANAGER', endpoint.Id),
         info: SystemService.info(),
         tags: TagService.tags(),
+        coordinator: getCoordinatorDeploymentForEnv(endpoint.Id),
       })
         .then(function success(data) {
           $scope.containers = data.containers;
           $scope.containerStatusComponent = useContainerStatusComponent(data.containers);
-
+          
           $scope.images = data.images;
           $scope.imagesTotalSizeComponent = useImagesTotalSizeComponent(imagesTotalSize(data.images));
-
+          
           $scope.volumeCount = data.volumes.length;
           $scope.networkCount = data.networks.length;
           $scope.serviceCount = data.services.length;
           $scope.stackCount = data.stacks.length;
           $scope.info = data.info;
+          
+          //coordintaor
+          if(data.coordinator){
+            $scope.coordinatorStatusComponent = useCoordinatorStatusComponent(data.coordinator.verified);
+            $scope.coordinatorCount = 1
+          } else{
+            $scope.coordinatorCount = 0
+          }
 
           $scope.gpuInfoStr = $scope.buildGpusStr(new Set());
           $scope.gpuUseAll = _.get($scope, 'endpoint.Snapshots[0].GpuUseAll', false);

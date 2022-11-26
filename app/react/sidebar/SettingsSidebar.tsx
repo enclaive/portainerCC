@@ -6,6 +6,7 @@ import {
   Radio,
   FileText,
   Bell,
+  Shield,
 } from 'react-feather';
 
 import { usePublicSettings } from '@/react/portainer/settings/queries';
@@ -122,6 +123,34 @@ export function SettingsSidebar({ isAdmin, isTeamLeader }: Props) {
         label="Notifications"
         data-cy="portainerSidebar-notifications"
       />
+      {/* portainerCC */}
+      {isAdmin && (
+        <SidebarItem
+            label="PortainerCC"
+            to="portainer.portainerCC"
+            icon={Shield}
+          >
+            <SidebarItem
+              to="portainer.coordinator-build"
+              label="Coordinator"
+            />
+            <SidebarItem
+              to="portainer.keymanagement"
+              params={{ type: 'SIGNING' }}
+              label="SGX Signing Keys"
+            />
+            <SidebarItem
+              to="portainer.keymanagement"
+              params={{ type: 'FILE_ENC' }}
+              label="File Encryption Keys"
+            />
+            {/* <SidebarItem
+              to="portainer.confimages"
+              label="Confidential Images"
+            /> */}
+          </SidebarItem>
+      )}
+      {/* portainerCC */}
       {isAdmin && (
         <SidebarItem
           to="portainer.settings"

@@ -15,6 +15,16 @@ export function useContainerStatusComponent(containers: DockerContainer[]) {
 export function ContainerStatus({ containers }: Props) {
   return (
     <div className="pull-right">
+      {/* <div>
+        <div className="vertical-center space-right pr-5">
+          <Icon
+            icon="shield"
+            className={clsx('icon icon-sm icon-success')}
+            feather
+          />
+          {runningContainersFilter(containers)} as verified Marble
+        </div>
+      </div> */}
       <div>
         <div className="vertical-center space-right pr-5">
           <Icon
