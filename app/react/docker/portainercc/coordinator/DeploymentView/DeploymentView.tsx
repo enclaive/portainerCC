@@ -85,7 +85,7 @@ export function CoordinatorDeploymentView() {
 
                                             <FormControl
                                                 inputId="verify"
-                                                label="Auto verifiy after deployment?"
+                                                label="Auto verify after deployment?"
                                             >
 
                                                 <Checkbox
