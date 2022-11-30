@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { FormControl } from '@@/form-components/FormControl';
 import { Widget } from '@@/Widget';
 import { LoadingButton } from '@@/buttons/LoadingButton';
+import { Checkbox } from '@@/form-components/Checkbox';
 
 import { useEnvironmentId } from '@/portainer/hooks/useEnvironmentId';
 import { CoordinatorImageSelector } from '@@/CoordinatorImageSelector';
@@ -29,7 +30,8 @@ export function CoordinatorDeploymentView() {
     }
 
     const initialValues = {
-        coordinatorImageId: 0
+        coordinatorImageId: 0,
+        verify: true
     }
 
     return (
@@ -81,6 +83,23 @@ export function CoordinatorDeploymentView() {
                                             </FormControl>
 
 
+                                            <FormControl
+                                                inputId="verify"
+                                                label="Auto verifiy after deployment?"
+                                            >
+
+                                                <Checkbox
+                                                    id="verify"
+                                                    label="Verify coordinator quote after deployment"
+                                                    checked={values.verify}
+                                                    onChange={() =>
+                                                        setFieldValue('verify', !values.verify)
+                                                    }
+                                                />
+
+                                            </FormControl>
+
+
                                             <div className="form-group">
                                                 <div className="col-sm-12">
                                                     <LoadingButton
@@ -88,10 +107,9 @@ export function CoordinatorDeploymentView() {
                                                         data-cy="team-createTeamButton"
                                                         isLoading={isSubmitting}
                                                         loadingText="Deploying coordinator, this may take a while..."
-                                                    // onClick={() => handleBuildClick(values)}
                                                     >
                                                         <Icon icon="plus" feather size="md" />
-                                                        Deploy and Verify
+                                                        Deploy
                                                     </LoadingButton>
                                                 </div>
                                             </div>
@@ -170,7 +188,7 @@ export function CoordinatorDeploymentView() {
                                                     <tr>
                                                         <td>Manifest:</td>
                                                         <td>
-                                                            <pre style={{overflow: "scroll", whiteSpace: "pre-wrap"}}>
+                                                            <pre style={{ overflow: "scroll", whiteSpace: "pre-wrap" }}>
                                                                 {JSON.stringify(deploymentQuery.data?.manifest, null, 2)}
                                                             </pre>
                                                         </td>
@@ -236,8 +254,11 @@ export function CoordinatorDeploymentView() {
     }
 
     async function handleDeployment(values: FormValues) {
-        const data = await deployCoordinator(envId, values.coordinatorImageId)
-        console.log(data)
+        await deployCoordinator(envId, values.coordinatorImageId)
+        if (values.verify) {
+            await new Promise(s => setTimeout(s, 10000));
+            await verifiyCoordinator(envId)
+        }
         return null;
     }
 }

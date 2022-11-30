@@ -13,4 +13,5 @@ export interface Package {
 
 export interface FormValues {
   coordinatorImageId: number;
+  verify: boolean;
 }
