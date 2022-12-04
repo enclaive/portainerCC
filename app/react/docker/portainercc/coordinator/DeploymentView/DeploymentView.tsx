@@ -15,6 +15,7 @@ import { useCoordinatorImages } from '@/react/portainer/portainercc/coordinator/
 import { useCoordinatorDeploymentForEnv } from '../queries';
 import { FormValues } from './types';
 import { deployCoordinator, verifiyCoordinator } from '../coordinator.service';
+import { CertInfoModalButton } from './CertInfoModal';
 
 export function CoordinatorDeploymentView() {
 
@@ -117,7 +118,7 @@ export function CoordinatorDeploymentView() {
                                     )}
                                 </Formik>
 
-
+                                                    {/* <CertInfoModalButton /> */}
                             </Widget.Body>
                         </Widget>
                     </div>
@@ -207,26 +208,6 @@ export function CoordinatorDeploymentView() {
                                                         <Icon icon="shield" feather size="md" />
                                                         Verify
                                                     </LoadingButton>
-                                                    {/* <LoadingButton
-                                                        disabled={!deploymentQuery.data?.rootCert.Bytes}
-                                                        isLoading={isSubmitting}
-                                                        loadingText="Building coordinator image, this may take a while..."
-                                                        type='button'
-                                                        onClick={handleCertClick}
-                                                    >
-                                                        <Icon icon="lock" feather size="md" />
-                                                        Inspect Root Certificate
-                                                    </LoadingButton>
-                                                    <LoadingButton
-                                                        disabled={!deploymentQuery.data?.rootCert.Bytes}
-                                                        isLoading={isSubmitting}
-                                                        loadingText="Building coordinator image, this may take a while..."
-                                                        type='button'
-                                                        onClick={handleCertClick}
-                                                    >
-                                                        <Icon icon="lock" feather size="md" />
-                                                        Inspect User Certificate
-                                                    </LoadingButton> */}
                                                 </div>
                                             </div>
                                         </Form>
@@ -249,7 +230,40 @@ export function CoordinatorDeploymentView() {
     }
 
     async function handleCertClick() {
-        console.log("cert")
+        let pem = `-----BEGIN CERTIFICATE-----
+        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
+        -----END CERTIFICATE-----`
+        console.log(pem);
         return null;
     }
 

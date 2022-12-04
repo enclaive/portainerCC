@@ -12,6 +12,7 @@ import { Button } from '@@/buttons';
 import { CoordinatorListEntry } from '../types';
 import { removeCoordinatorImage } from '../coordinator.service';
 import { useCoordinatorDeployments } from '@/react/docker/portainercc/coordinator/queries';
+import { useEnvironmentList } from '@/portainer/environments/queries/useEnvironmentList';
 
 const storageKey = 'portainercc-coordinators';
 const useStore = createStore(storageKey);
@@ -23,6 +24,7 @@ export function CoordinatorImagesListView() {
     const keysQuery = useKeys('SIGNING')
     const coordintaorQuery = useCoordinatorImages();
     const deploymentQuery = useCoordinatorDeployments()
+    const envQuery = useEnvironmentList()
 
     let title = "Coordinator";
 
@@ -30,9 +32,18 @@ export function CoordinatorImagesListView() {
         return null;
     }
 
+    if (!envQuery.environments) {
+        return null;
+    }
+
     if (!deploymentQuery.data) {
         return null;
     }
+
+    deploymentQuery.data = deploymentQuery.data.map(entry => {
+        entry.endpointName = envQuery.environments.find(e => e.Id == entry.endpointId)?.Name
+        return entry
+    })
 
     return (
         <>
