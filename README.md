@@ -44,7 +44,7 @@ docker run -d -p 8000:8000 -p 9443:9443 --name portainercc --restart=always -v /
 
 ### Remote Attestation and Secret Provisioning
 
-WIKILINK
+[Step by Step guide to run MariaDB in PortainerCC](https://github.com/enclaive/portainerCC/wiki/PortainerCC-MariaDB-Guide)
 
 ## Licence
 
