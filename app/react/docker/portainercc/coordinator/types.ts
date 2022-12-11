@@ -4,6 +4,7 @@ export type CoordinatorDeployment = {
     id: CoordinatorDeploymentID,
     coordinatorId: number,
     endpointId: number,
+    endpointName?: string,
     rootCert: {
         Type: string,
         Headers: string,
