@@ -2,12 +2,14 @@ import { ChevronsLeft, ChevronsRight } from 'react-feather';
 import clsx from 'clsx';
 
 import { isBE } from '@/portainer/feature-flags/feature-flags.service';
-import smallLogo from '@/assets/ico/logomark.svg';
+// import smallLogo from '@/assets/ico/logomark.svg';
+import smallLogoCC from '@/assets/ico/logomark-cc.svg';
 
 import { Link } from '@@/Link';
 
-import fullLogoBE from './portainer_logo-BE.svg';
-import fullLogoCE from './portainer_logo-CE.svg';
+// import fullLogoBE from './portainer_logo-BE.svg';
+// import fullLogoCE from './portainer_logo-CE.svg';
+import fullLogoCC from './portainercc-logo.svg'
 import { useSidebarState } from './useSidebarState';
 import styles from './Header.module.css';
 
@@ -85,10 +87,11 @@ function getLogo(isOpen: boolean, customLogo?: string) {
   }
 
   if (!isOpen) {
-    return smallLogo;
+    return smallLogoCC;
   }
 
-  return isBE ? fullLogoBE : fullLogoCE;
+  // return isBE ? fullLogoBE : fullLogoCE;
+  return fullLogoCC;
 }
 
 function Logo({
