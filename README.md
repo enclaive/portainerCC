@@ -24,6 +24,9 @@ In its current state, PortainerCC offers these features:
 - Building and deploying a Remote Attestation System based on [Edgeless Systems Marblerun](https://github.com/edgelesssys/marblerun)
 - Deploying a MariaDB instance running on [Gramine](https://github.com/gramineproject/gramine) that gets remote attested and receives login credentials via Secret Provisioning
 
+![](https://github.com/enclaive/portainerCC/blob/develop/wip-screens.gif)
+
+
 ## Getting Started
 
 ### Prerequisites
