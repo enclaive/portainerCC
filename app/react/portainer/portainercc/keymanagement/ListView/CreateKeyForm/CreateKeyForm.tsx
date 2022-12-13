@@ -63,7 +63,6 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                     <FormControl
                                         inputId="key_description"
                                         label="Description"
-                                        errors="err"
                                         required
                                     >
                                         <Field
@@ -79,7 +78,6 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                     <FormControl
                                         inputId="key_teams"
                                         label="Teams"
-                                        errors="err"
                                         required
                                     >
 
