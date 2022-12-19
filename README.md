@@ -14,7 +14,7 @@
 
 ## About The Project
 
-In view of the ever increasing shift of applications to the cloud, new mechanisms need to be developed to protect the workload. In the cloud, physical resources are no more isolated from the Internet. In a cloud native world comprising virtual machines, kubernetes clusters and serverless functions, physical resources are shared. Moreover, the resources are maintained by a third party known as the cloud provider. For decades it is well known that the application isolation provided by hypervisors and operating systems is weak. A vast amount of exploits have been demonstrated how to escapte the present security and trust model.
+In view of the ever increasing shift of applications to the cloud, new mechanisms need to be developed to protect the workload. In contrast to on-prem, physical resources are no more isolated in the cloud. Rather virtual machines, kubernetes clusters and serverless functions, share physical resources. Moreover, the resources are maintained by a third party known as the cloud provider who has root access to the resources. For decades it is well known that the application isolation provided by hypervisors and operating systems is weak. A vast amount of exploits have been demonstrated how to escapte the present security and trust model.
 
 Confidential Computing, for short CC, is a new, promising technology addressing the problem. CC makes it for the very first time practically possible to encrypt data during runtime in such a way that only the CPU has access to it. This makes it possible to protect application code and data in the light of vertical and horizontal exploits.
 
