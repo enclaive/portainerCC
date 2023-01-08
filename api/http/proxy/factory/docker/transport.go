@@ -61,6 +61,7 @@ type (
 	}
 	restrictedOperationRequest func(*http.Response, *operationExecutor) error
 	operationRequest           func(*http.Request) error
+	operationTransportRequest  func(*http.Request, *Transport) error
 )
 
 // NewTransport returns a pointer to a new Transport instance.
@@ -130,6 +131,9 @@ func (transport *Transport) ProxyDockerRequest(request *http.Request) (*http.Res
 }
 
 func (transport *Transport) executeDockerRequest(request *http.Request) (*http.Response, error) {
+
+	log.Info().Msg("Executing Docker Request")
+
 	response, err := transport.HTTPTransport.RoundTrip(request)
 
 	if transport.endpoint.Type != portainer.EdgeAgentOnDockerEnvironment {
@@ -577,8 +581,8 @@ func (transport *Transport) rewriteOperation(request *http.Request, operation re
 	return transport.executeRequestAndRewriteResponse(request, operation, executor)
 }
 
-func (transport *Transport) interceptAndRewriteRequest(request *http.Request, operation operationRequest) (*http.Response, error) {
-	err := operation(request)
+func (transport *Transport) interceptAndRewriteRequest(request *http.Request, operation operationTransportRequest) (*http.Response, error) {
+	err := operation(request, transport)
 	if err != nil {
 		return nil, err
 	}

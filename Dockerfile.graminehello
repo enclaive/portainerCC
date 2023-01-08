@@ -1,0 +1,21 @@
+FROM ubuntu:20.04
+RUN apt-get update
+RUN apt-get install curl gnupg git -y
+RUN curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg
+RUN echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/gramine-keyring.gpg] https://packages.gramineproject.io/ focal main' | tee /etc/apt/sources.list.d/gramine.list
+RUN curl -fsSL https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
+RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | tee /etc/apt/sources.list.d/intel-sgx.list
+RUN apt-get update
+RUN apt-get install gramine -y
+
+RUN gramine-sgx-gen-private-key
+
+RUN git clone --depth 1 --branch v1.3.1 https://github.com/gramineproject/gramine.git
+
+RUN apt-get install gcc make -y
+
+WORKDIR gramine/CI-Examples/helloworld
+
+RUN ls
+
+RUN make SGX=1
