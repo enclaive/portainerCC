@@ -36,5 +36,10 @@ func NewHandler(bouncer *security.RequestBouncer, dataStore dataservices.DataSto
 	//secure images
 	restrictedRouter.Handle("/portainercc/secimages", httperror.LoggerHandler(h.listSecImages)).Methods(http.MethodGet)
 
+	//confidential templates
+	restrictedRouter.Handle("/portainercc/confidential-templates", httperror.LoggerHandler(h.listConfidentialTemplates)).Methods(http.MethodGet)
+	restrictedRouter.Handle("/portainercc/confidential-templates", httperror.LoggerHandler(h.deployConfidentialTemplate)).Methods(http.MethodPost)
+	restrictedRouter.Handle("/portainercc/confidential-templates/add", httperror.LoggerHandler(h.createConfidentialTemplate)).Methods(http.MethodPost)
+
 	return h
 }

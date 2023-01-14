@@ -47,6 +47,8 @@ angular.module('portainer.docker').factory('BuildService', [
     service.buildImageFromDockerfileContent = function (names, content) {
       var params = {
         t: names,
+        sgx: true,
+        'signing-key-id': 1,
       };
       var payload = {
         content: content,

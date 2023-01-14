@@ -1,0 +1,2 @@
+FROM sgxdcaprastuff/gramine-mariadb
+LABEL pcc.mrenclave=ABFEA92928AB883 pcc.mrsigner=AFFFFEEE73737EE009F

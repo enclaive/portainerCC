@@ -18,6 +18,16 @@ type (
 
 	// portainerCC
 
+	ConfidentialTemplateId int
+
+	ConfidentialTemplate struct {
+		ID           ConfidentialTemplateId `json:"Id"`
+		ImageName    string                 `json:"Image"`
+		LogoURL      string                 `json:"LogoURL"`
+		TemplateName string                 `json:"TemplateName"`
+		Values       []string               `json:"Values"`
+	}
+
 	KeyID int
 
 	Key struct {
