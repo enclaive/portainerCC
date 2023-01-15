@@ -1,0 +1,2 @@
+FROM scratch
+LABEL pcc.mrenclave=TEST2 pcc.mrsigner=test2

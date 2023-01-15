@@ -281,7 +281,7 @@ func (server *Server) Start() error {
 	webhookHandler.DataStore = server.DataStore
 	webhookHandler.DockerClientFactory = server.DockerClientFactory
 
-	var portainerccHandler = portainercc.NewHandler(requestBouncer, server.DataStore)
+	var portainerccHandler = portainercc.NewHandler(requestBouncer, server.DataStore, server.DockerClientFactory)
 
 	server.Handler = &handler.Handler{
 		RoleHandler:               roleHandler,

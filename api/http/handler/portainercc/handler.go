@@ -7,20 +7,23 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/docker"
 	"github.com/portainer/portainer/api/http/security"
 )
 
 // Handler is the HTTP handler used to handle MOTD operations.
 type Handler struct {
 	*mux.Router
-	DataStore dataservices.DataStore
+	DataStore           dataservices.DataStore
+	DockerClientFactory *docker.ClientFactory
 }
 
 // NewHandler returns a new Handler
-func NewHandler(bouncer *security.RequestBouncer, dataStore dataservices.DataStore) *Handler {
+func NewHandler(bouncer *security.RequestBouncer, dataStore dataservices.DataStore, dockerClientFactory *docker.ClientFactory) *Handler {
 	h := &Handler{
-		Router:    mux.NewRouter(),
-		DataStore: dataStore,
+		Router:              mux.NewRouter(),
+		DataStore:           dataStore,
+		DockerClientFactory: dockerClientFactory,
 	}
 
 	restrictedRouter := h.NewRoute().Subrouter()
