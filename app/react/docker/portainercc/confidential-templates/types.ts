@@ -12,3 +12,11 @@ export type ServiceDeploy = {
     Name: string,
     ImageID: string,
 }
+
+export type ConfidentialTemplate = {
+    Id: number,
+    Image: string,
+    LogoURL: string,
+    TemplateName: string,
+    Values: Array<string>;
+}
