@@ -1,2 +1,2 @@
 FROM sgxdcaprastuff/gramine-mariadb
-LABEL pcc.mrenclave=ABFEA92928AB883 pcc.mrsigner=AFFFFEEE73737EE009F
+LABEL pcc.mrenclave=e556b1f4a686be466b24c8d13df07705d5c1b9c8441281b84aec16c3d778521b pcc.mrsigner=idkidkidk

@@ -21,11 +21,16 @@ type (
 	ConfidentialTemplateId int
 
 	ConfidentialTemplate struct {
-		ID           ConfidentialTemplateId `json:"Id"`
-		ImageName    string                 `json:"Image"`
-		LogoURL      string                 `json:"LogoURL"`
-		TemplateName string                 `json:"TemplateName"`
-		Values       []string               `json:"Values"`
+		ID                  ConfidentialTemplateId `json:"Id"`
+		ImageName           string                 `json:"Image"`
+		LogoURL             string                 `json:"LogoURL"`
+		TemplateName        string                 `json:"TemplateName"`
+		Inputs              []string               `json:"Inputs"`
+		Secrets             map[string]string      `json:"Secrets"`
+		ManifestBoilerplate struct {
+			ManifestParameters Parameters        `json:"ManifestParameters"`
+			ManifestSecrets    map[string]Secret `json:"ManifestSecrets"`
+		} `json:"ManifestBoilerplate"`
 	}
 
 	KeyID int

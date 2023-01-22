@@ -9,5 +9,5 @@ export interface DeployConfidentialTemplateFormValues {
   Id: number;
   EnvId: number;
   Name: string;
-  Values: Object;
+  Inputs: Object;
 }

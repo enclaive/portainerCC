@@ -24,7 +24,7 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
         EnvId: envId,
         Image: template.Image,
         Name: "",
-        Values: template.Values.reduce((acc, curr) => ({ ...acc, [curr]: "" }), {})
+        Inputs: template.Inputs.reduce((acc, curr) => ({ ...acc, [curr]: "" }), {})
     }
 
     return (
@@ -36,7 +36,7 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
                             <div className="row">
                                 <span className={'pull-left vertical-center'}>
                                     <div className='vertical-center justify-center min-w-[56px]'>
-                                        <img className="blocklist-item-logo" src="https://portainer-io-assets.sfo2.digitaloceanspaces.com/logos/ubuntu.png" />
+                                        <img className="blocklist-item-logo" src={template.LogoURL} />
                                     </div>
                                     <div className='blocklist-item-line'>
                                         <span className='ml-5 blocklist-item-title'>{template.TemplateName}</span>
@@ -90,8 +90,8 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
                                         </FormSection>
 
                                         <FormSection title='Secrets'>
-                                            {Object.keys(values.Values).map((e) => {
-                                                let str = "Values." + e
+                                            {Object.keys(values.Inputs).map((e) => {
+                                                let str = "Inputs." + e
                                                 return (
                                                     <>
                                                         <FormControl inputId={str} label={e} required>

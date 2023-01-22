@@ -10,10 +10,15 @@ import (
 )
 
 type ConfTempParams struct {
-	ImageName    string
-	LogoURL      string
-	TemplateName string
-	Values       []string
+	ImageName           string
+	LogoURL             string
+	TemplateName        string
+	Inputs              []string
+	Secrets             map[string]string
+	ManifestBoilerplate struct {
+		ManifestParameters portainer.Parameters
+		ManifestSecrets    map[string]portainer.Secret
+	}
 }
 
 func (handler *Handler) createConfidentialTemplate(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -28,7 +33,12 @@ func (handler *Handler) createConfidentialTemplate(w http.ResponseWriter, r *htt
 		ImageName:    params.ImageName,
 		LogoURL:      params.LogoURL,
 		TemplateName: params.TemplateName,
-		Values:       params.Values,
+		Inputs:       params.Inputs,
+		Secrets:      params.Secrets,
+		ManifestBoilerplate: struct {
+			ManifestParameters portainer.Parameters        "json:\"ManifestParameters\""
+			ManifestSecrets    map[string]portainer.Secret "json:\"ManifestSecrets\""
+		}(params.ManifestBoilerplate),
 	}
 
 	err = handler.DataStore.ConfidentialTemplate().Create(templateObject)
