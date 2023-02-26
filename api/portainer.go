@@ -25,7 +25,7 @@ type (
 		ImageName           string                 `json:"Image"`
 		LogoURL             string                 `json:"LogoURL"`
 		TemplateName        string                 `json:"TemplateName"`
-		Inputs              []string               `json:"Inputs"`
+		Inputs              []Input                `json:"Inputs"`
 		Secrets             map[string]string      `json:"Secrets"`
 		ManifestBoilerplate struct {
 			ManifestParameters Parameters        `json:"ManifestParameters"`
@@ -221,6 +221,14 @@ type (
 	Marble struct {
 		Package    string     `json:"Package"`
 		Parameters Parameters `json:"Parameters"`
+	}
+
+	Input struct {
+		Label          string
+		Default        string
+		Type           string
+		SecretName     string `json:"SecretName,omitempty"`
+		ReplacePattern string `json:"ReplacePattern,omitempty"`
 	}
 
 	Parameters struct {

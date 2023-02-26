@@ -18,5 +18,5 @@ export type ConfidentialTemplate = {
     Image: string,
     LogoURL: string,
     TemplateName: string,
-    Inputs: Array<string>;
+    Inputs: Array<any>;
 }

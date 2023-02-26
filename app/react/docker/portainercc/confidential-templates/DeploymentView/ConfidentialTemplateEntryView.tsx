@@ -19,12 +19,15 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
 
     const [toggle, setToggle] = useState(false);
 
+    console.log("HALLO")
+    console.log(template)
+
     const initialValues = {
         Id: template.Id,
         EnvId: envId,
         Image: template.Image,
         Name: "",
-        Inputs: template.Inputs.reduce((acc, curr) => ({ ...acc, [curr]: "" }), {})
+        Inputs: template.Inputs.reduce((acc, curr) => ({ ...acc, [curr.Label]: "" }), {})
     }
 
     return (

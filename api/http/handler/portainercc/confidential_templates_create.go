@@ -13,7 +13,7 @@ type ConfTempParams struct {
 	ImageName           string
 	LogoURL             string
 	TemplateName        string
-	Inputs              []string
+	Inputs              []portainer.Input
 	Secrets             map[string]string
 	ManifestBoilerplate struct {
 		ManifestParameters portainer.Parameters

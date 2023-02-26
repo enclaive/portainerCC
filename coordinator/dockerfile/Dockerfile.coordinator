@@ -24,13 +24,13 @@ RUN apt-get update \
     && apt-get install -y wget \
     # && wget -q https://github.com/edgelesssys/edgelessrt/releases/download/v0.3.5/edgelessrt_0.3.5_amd64.deb \
     # && apt-get install -y ./edgelessrt_0.3.5_amd64.deb build-essential \
-    && wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb \
-    && apt-get install -y ./libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb \
+    && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb \
+    && apt-get install -y ./libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb \
     # && wget https://github.com/edgelesssys/ego/re leases/download/v1.0.0/ego_1.0.0_amd64.deb \
     # && apt install -y ./ego_1.0.0_amd64.deb build-essential libssl-dev \
     # && rm -f ./ego_1.0.0_amd64.deb \
     # && rm -f ./edgelessrt_0.3.5_amd64.deb \
-    && rm -f ./libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb \
+    && rm -f ./libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
 RUN sed -i 's,https://localhost:8081/sgx/certification/v3/,https://172.17.0.1:8081/sgx/certification/v3/,g' /etc/sgx_default_qcnl.conf \
     && sed -i 's,"use_secure_cert": true,"use_secure_cert": false,g' /etc/sgx_default_qcnl.conf \

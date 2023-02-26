@@ -48,8 +48,9 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	}
 
 	for _, val := range template.Inputs {
-		if _, ok := params.Inputs[val]; !ok {
-			return httperror.BadRequest("request body malefomred", fmt.Errorf("values missing. Expected: %s ", strings.Join(template.Inputs[:], ",")))
+		if _, ok := params.Inputs[val.Label]; !ok {
+			return httperror.BadRequest("request body malefomred", fmt.Errorf("values missing."))
+			// return httperror.BadRequest("request body malefomred", fmt.Errorf("values missing. Expected: %s ", strings.Join(template.Inputs[:], ",")))
 		}
 	}
 
@@ -104,7 +105,7 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	fmt.Printf("Packagename %s\n", params.Name)
 	fmt.Printf("Secrets:\n")
 	for _, val := range template.Inputs {
-		fmt.Printf("\t%s: %s\n", val, params.Inputs[val])
+		fmt.Printf("\t%s: %s\n", val.Label, params.Inputs[val.Label])
 	}
 
 	//create updateManifest
@@ -197,12 +198,22 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 		replacedStrings[k] = make(map[string]string)
 		replacedStrings[k]["Key"] = template.Secrets[k]
 		for _, val := range template.Inputs {
-			replacedStrings[k]["Key"] = strings.Replace(replacedStrings[k]["Key"], fmt.Sprintf("$$$%s$$$", val), params.Inputs[val], -1)
+			if val.Type == "SECRET" && val.SecretName == k {
+				replacedStrings[k]["Key"] = strings.Replace(replacedStrings[k]["Key"], val.ReplacePattern, params.Inputs[val.Label], -1)
+			}
 		}
-		replacedStrings[k]["Key"] = base64.StdEncoding.EncodeToString([]byte(replacedStrings[k]["Key"]))
+		//TODO diry
+		if !strings.Contains(k, "Key") {
+			replacedStrings[k]["Key"] = base64.StdEncoding.EncodeToString([]byte(replacedStrings[k]["Key"]))
+
+		}
 	}
 
 	secretsJson, err := json.Marshal(replacedStrings)
+
+	fmt.Printf("SECRETS POST COORDINATOR:")
+	fmt.Printf(string(secretsJson))
+
 	// send secrets to coordinator
 	secretsResp, err := cl.Post("https://coordinator:9001/secrets", "application/json", bytes.NewReader(secretsJson))
 	if err != nil {
