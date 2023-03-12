@@ -229,6 +229,8 @@ type (
 		Type           string
 		SecretName     string `json:"SecretName,omitempty"`
 		ReplacePattern string `json:"ReplacePattern,omitempty"`
+		PortContainer  string `json:"PortContainer,omitempty"`
+		PortType       string `json:"PortType,omitempty"`
 	}
 
 	Parameters struct {

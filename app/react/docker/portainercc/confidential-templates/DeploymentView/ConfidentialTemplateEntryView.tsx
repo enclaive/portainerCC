@@ -19,9 +19,6 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
 
     const [toggle, setToggle] = useState(false);
 
-    console.log("HALLO")
-    console.log(template)
-
     const initialValues = {
         Id: template.Id,
         EnvId: envId,
@@ -29,6 +26,11 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
         Name: "",
         Inputs: template.Inputs.reduce((acc, curr) => ({ ...acc, [curr.Label]: "" }), {})
     }
+
+
+    let secrets = template.Inputs.filter(input => input.Type == "SECRET");
+    let ports = template.Inputs.filter(input => input.Type == "PORT");
+    let volumes = template.Inputs.filter(input => input.Type == "VOLUME")
 
     return (
         <>
@@ -92,18 +94,68 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
                                             </FormControl>
                                         </FormSection>
 
-                                        <FormSection title='Secrets'>
-                                            {Object.keys(values.Inputs).map((e) => {
-                                                let str = "Inputs." + e
+                                        {secrets.length > 0 && <FormSection title='Secrets'>
+                                            {secrets.map((input) => {
+                                                let str = "Inputs." + input.Label;
                                                 return (
                                                     <>
-                                                        <FormControl inputId={str} label={e} required>
-                                                            <Field as={Input} name={str} id={str} required placeholder="" />
+                                                        <FormControl inputId={str} label={input.Label} required>
+                                                            <Field as={Input} name={str} id={str} required placeholder={input.Default} />
                                                         </FormControl>
                                                     </>
                                                 )
                                             })}
-                                        </FormSection>
+                                        </FormSection>}
+
+                                        {ports.length > 0 && <FormSection title='Port mapping'>
+                                            {ports.map((input) => {
+                                                let str = "Inputs." + input.Label;
+                                                return (
+                                                    <>
+                                                        <div className="form-group">
+                                                            <div className="form-inline mx-10">
+                                                                <div className="input-group col-sm-5 input-group-sm">
+                                                                    <span className="input-group-addon">host</span>
+                                                                    <input type="text" className="form-control" name={str} id={str} required placeholder={input.Default} />
+                                                                </div>
+                                                                <div className="input-group col-sm-5 input-group-sm">
+                                                                    <span className="input-group-addon">container</span>
+                                                                    <input type="text" className="form-control" readOnly value={input.PortContainer} />
+                                                                </div>
+                                                                <div className="input-group col-sm-2 input-group-sm">
+                                                                    <div className="btn-group btn-group-sm">
+                                                                        <label className="btn btn-light">{input.PortType}</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )
+                                            })}
+
+                                        </FormSection>}
+
+                                        {volumes.length > 0 && <FormSection title='Encrypted Volumes'>
+                                            {volumes.map((input) => {
+                                                let str = "Inputs." + input.Label;
+                                                return (
+                                                    <>
+                                                        <div className="form-group">
+                                                            <div className="col-sm-10 mx-10 input-group">
+                                                                <span className="input-group-addon">{input.Label}</span>
+                                                                <div className="col-sm-12 input-group">
+                                                                    <select className="form-control">
+                                                                        <option value="" disabled selected>Select a volume</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )
+                                            })}
+
+                                        </FormSection>}
+
 
 
                                         <div className="form-group">

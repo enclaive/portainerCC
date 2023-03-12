@@ -242,14 +242,32 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	//
 	//
 
+	exposedPorts := make(nat.PortSet)
+	portBinding := make(nat.PortMap)
+
+	fmt.Println("POOOOOORTS")
+	for _, val := range template.Inputs {
+		if val.Type == "PORT" {
+			p, err := nat.NewPort(val.PortType, val.PortContainer)
+			if err != nil {
+				return httperror.InternalServerError("unable to create port", err)
+			}
+			exposedPorts[p] = struct{}{}
+
+			portBinding[p] = []nat.PortBinding{
+				{
+					HostIP:   "",
+					HostPort: params.Inputs[val.Label],
+				},
+			}
+		}
+	}
+
 	//TODO port usw
-	port1, err := nat.NewPort("tcp", "3306")
 	createContainer, err := client.ContainerCreate(r.Context(),
 		&container.Config{
-			Image: template.ImageName,
-			ExposedPorts: nat.PortSet{
-				port1: struct{}{},
-			},
+			Image:        template.ImageName,
+			ExposedPorts: exposedPorts,
 			Env: []string{
 				"EDG_MARBLE_TYPE=" + params.Name + "_marble",
 				"EDG_MARBLE_COORDINATOR_ADDR=coordinator:2001",
@@ -258,14 +276,7 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 			Domainname: "coordinator",
 		},
 		&container.HostConfig{
-			PortBindings: nat.PortMap{
-				port1: []nat.PortBinding{
-					{
-						HostIP:   "",
-						HostPort: "3306",
-					},
-				},
-			},
+			PortBindings:    portBinding,
 			PublishAllPorts: true,
 			Resources: container.Resources{
 				Devices: []container.DeviceMapping{

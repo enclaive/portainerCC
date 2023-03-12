@@ -18,5 +18,15 @@ export type ConfidentialTemplate = {
     Image: string,
     LogoURL: string,
     TemplateName: string,
-    Inputs: Array<any>;
+    Inputs: Array<Input>;
+}
+
+export type Input = {
+    Label: string,
+    Default: string,
+    Type: string,
+    SecretName?: string,
+    ReplacePattern?: string,
+    PortContainer?: string,
+    PortType?: string
 }
