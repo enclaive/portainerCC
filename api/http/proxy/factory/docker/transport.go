@@ -6,8 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"os/exec"
 	"path"
 	"regexp"
 	"strconv"
@@ -164,8 +168,227 @@ func (transport *Transport) proxyAgentRequest(r *http.Request) (*http.Response, 
 			return nil, err
 		}
 
+		//read operation
+		operation := path.Base(r.URL.Path)
+
+		//body is only readable once..
+		var origBody []byte = nil
+		if r.Body != nil {
+			origBody, _ = ioutil.ReadAll(r.Body)
+			r.Body = ioutil.NopCloser(bytes.NewReader(origBody))
+		}
+
+		subRequest := *r.Clone(r.Context())
+		r.Body = ioutil.NopCloser(bytes.NewReader(origBody))
+		subRequest.Body = ioutil.NopCloser(bytes.NewReader(origBody))
+		decrypt := subRequest.FormValue("decrypt")
+
+		if (operation == "get" && decrypt == "true") || operation == "put" {
+
+			subRequest = *r.Clone(r.Context())
+
+			//send subRequest to get label (encryption key id)
+			subRequest.URL.Path = "/volumes/" + volumeName
+			subRequest.Method = "GET"
+			subRequest.ContentLength = 0
+			subRequest.Body = nil
+
+			res, err := transport.rewriteOperation(&subRequest, transport.volumeInspectOperation)
+
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			resObject, err := utils.GetResponseAsJSONObject(res)
+
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			pfKeyId := 0
+			if resObject["Labels"] != nil {
+				labels := resObject["Labels"].(map[string]interface{})
+				if val, ok := labels["encrypted"]; ok {
+					if val == "true" {
+						pfKeyId, _ = strconv.Atoi(labels["pfEncryptionKeyId"].(string))
+					}
+				}
+			}
+
+			//if pfKeyId > 0 its encrypted and we need the key
+			if pfKeyId > 0 {
+
+				//get key from DB
+				key, err := transport.dataStore.Key().Key(portainer.KeyID(pfKeyId))
+				if transport.dataStore.IsErrObjectNotFound(err) {
+					//TODO error handling
+					fmt.Println("key not found TODO ERROR HANDLING")
+					fmt.Println(err)
+				} else if err != nil {
+					//TODO error handling
+					fmt.Println("error TODO ERROR HANDLING")
+					fmt.Println(err)
+				}
+
+				//create temp key file for gramine-cli
+				tempKeyFile, err := os.CreateTemp("", "pfkey_")
+				if err != nil {
+					//TODO error handling
+					fmt.Println("error TODO ERROR HANDLING")
+					fmt.Println(err)
+				}
+
+				defer os.Remove(tempKeyFile.Name())
+
+				keyBytes, err := base64.StdEncoding.DecodeString(key.PFKey)
+				if err != nil {
+					//TODO error handling
+					fmt.Println("error TODO ERROR HANDLING")
+					fmt.Println(err)
+				}
+
+				_, err = tempKeyFile.Write(keyBytes)
+				if err != nil {
+					//TODO error handling
+					fmt.Println("error TODO ERROR HANDLING")
+					fmt.Println(err)
+				}
+
+				switch operation {
+				case "get":
+					fmt.Println("GET AND DECRYPT")
+
+					//get the file from agent
+					response, err := transport.restrictedResourceOperation(r, resourceID, volumeName, portainer.VolumeResourceControl, true)
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					tempDataFile, err := os.CreateTemp("", "encrypted_")
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					defer os.Remove(tempDataFile.Name())
+					defer response.Body.Close()
+					_, err = io.Copy(tempDataFile, response.Body)
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					fmt.Println(tempDataFile.Name())
+					//decrypt via cli
+					cmd := exec.Command("gramine-sgx-pf-crypt", "decrypt", "-i", tempDataFile.Name(), "-o", tempDataFile.Name()+"_decrypted", "-w", tempKeyFile.Name())
+					stdout, err := cmd.Output()
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+					fmt.Println(string(stdout))
+
+					tempDecryptedFile, err := os.Open(tempDataFile.Name() + "_decrypted")
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					response.Body = tempDecryptedFile
+
+					//TODO http stream broken
+					info, _ := tempDecryptedFile.Stat()
+					response.ContentLength = int64(info.Size())
+
+					defer os.Remove(tempDecryptedFile.Name())
+
+					return response, err
+
+				case "put":
+					fmt.Println("PUT AND ENCRYPT")
+
+					//get file from upload
+					subRequest := *r.Clone(r.Context())
+					subRequest.Body = ioutil.NopCloser(bytes.NewReader(origBody))
+					upload, header, err := subRequest.FormFile("file")
+					fmt.Println(header)
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					defer upload.Close()
+
+					tempDataFilePlain, err := os.CreateTemp("", "upload_")
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					io.Copy(tempDataFilePlain, upload)
+
+					defer tempDataFilePlain.Close()
+
+					//encrypt with gramine-cli
+					fmt.Println("Using Key: " + tempKeyFile.Name())
+					cmd := exec.Command("gramine-sgx-pf-crypt", "encrypt", "-i", tempDataFilePlain.Name(), "-o", tempDataFilePlain.Name()+"_encrypted", "-w", tempKeyFile.Name())
+					stdout, err := cmd.Output()
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+					fmt.Println(string(stdout))
+
+					//replace body with encrypted file
+					subRequest.Body = ioutil.NopCloser(bytes.NewReader(origBody))
+					formPath := subRequest.FormValue("Path")
+
+					formFile, err := os.Open(tempDataFilePlain.Name() + "_encrypted")
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					defer formFile.Close()
+
+					newBody := &bytes.Buffer{}
+					writer := multipart.NewWriter(newBody)
+					part, _ := writer.CreateFormFile("file", header.Filename)
+					io.Copy(part, formFile)
+					part, _ = writer.CreateFormField("Path")
+					part.Write([]byte(formPath))
+					writer.Close()
+
+					//TODO dirty hack
+					rx, err := http.NewRequest("POST", "x", newBody)
+					if err != nil {
+						//TODO error handling
+						fmt.Println("error TODO ERROR HANDLING")
+						fmt.Println(err)
+					}
+
+					r.Body = rx.Body
+					r.ContentLength = rx.ContentLength
+					r.Header.Set("Content-Type", writer.FormDataContentType())
+
+					//remove files
+					defer os.Remove(tempDataFilePlain.Name() + "_encrypted")
+				}
+			}
+
+		}
+
 		// volume browser request
-		return transport.restrictedResourceOperation(r, resourceID, volumeName, portainer.VolumeResourceControl, true)
+		response, err := transport.restrictedResourceOperation(r, resourceID, volumeName, portainer.VolumeResourceControl, true)
+
+		return response, err
+
 	case strings.HasPrefix(requestPath, "/dockerhub"):
 		requestPath, registryIdString := path.Split(r.URL.Path)
 

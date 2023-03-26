@@ -11,10 +11,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	httperror "github.com/portainer/libhttp/error"
@@ -54,7 +56,6 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 		}
 	}
 
-	//pull image and get mr enclave mr signer
 	//get endpoint
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(params.EnvId))
 	if err != nil {
@@ -68,6 +69,7 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 		return httperror.InternalServerError("could not create docker client", err)
 	}
 
+	//pull image and get mr enclave mr signer
 	res, err := client.ImagePull(r.Context(), template.ImageName, types.ImagePullOptions{})
 	if err != nil {
 		return httperror.InternalServerError("Unable to pull image", err)
@@ -194,6 +196,7 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	//build secrets
 	replacedStrings := map[string]map[string]string{}
 
+	//replace secrets in files/strings secrets
 	for k := range template.Secrets {
 		replacedStrings[k] = make(map[string]string)
 		replacedStrings[k]["Key"] = template.Secrets[k]
@@ -202,16 +205,56 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 				replacedStrings[k]["Key"] = strings.Replace(replacedStrings[k]["Key"], val.ReplacePattern, params.Inputs[val.Label], -1)
 			}
 		}
-		//TODO diry
-		if !strings.Contains(k, "Key") {
-			replacedStrings[k]["Key"] = base64.StdEncoding.EncodeToString([]byte(replacedStrings[k]["Key"]))
+		//encode secret as base64
+		replacedStrings[k]["Key"] = base64.StdEncoding.EncodeToString([]byte(replacedStrings[k]["Key"]))
+	}
 
+	//create Volumemapping and get file encryption keys
+	mountedVolumes := []mount.Mount{}
+	for _, val := range template.Inputs {
+		if val.Type == "VOLUME" {
+			//get pfkeyid from volume label
+			_, inspectRaw, err := client.VolumeInspectWithRaw(r.Context(), params.Inputs[val.Label])
+			if err != nil {
+				return httperror.InternalServerError("Unable to inspect image", err)
+			}
+
+			var JSON map[string]interface{}
+			json.Unmarshal(inspectRaw, &JSON)
+
+			labels := JSON["Labels"].(map[string]interface{})
+			pfKeyId, _ := strconv.Atoi(labels["pfEncryptionKeyId"].(string))
+
+			// get key from DB
+			key, err := handler.DataStore.Key().Key(portainer.KeyID(pfKeyId))
+			if handler.DataStore.IsErrObjectNotFound(err) {
+				//TODO error handling
+				fmt.Println("key not found TODO ERROR HANDLING")
+				fmt.Println(err)
+			} else if err != nil {
+				//TODO error handling
+				fmt.Println("error TODO ERROR HANDLING")
+				fmt.Println(err)
+			}
+
+			//add to secrets payload - key is already saved as base64
+			replacedStrings[val.SecretName] = make(map[string]string)
+			replacedStrings[val.SecretName]["Key"] = key.PFKey
+
+			//add to docker container config
+			mountedVolumes = append(mountedVolumes, mount.Mount{
+				Type:   mount.TypeVolume,
+				Source: params.Inputs[val.Label],
+				Target: val.Label,
+			})
+
+			// replacedStrings[k]["Key"] = strings.Replace(replacedStrings[k]["Key"], val.ReplacePattern, params.Inputs[val.Label], -1)
 		}
 	}
 
 	secretsJson, err := json.Marshal(replacedStrings)
 
-	fmt.Printf("SECRETS POST COORDINATOR:")
+	fmt.Println("SECRETS POST COORDINATOR:")
 	fmt.Printf(string(secretsJson))
 
 	// send secrets to coordinator
@@ -242,10 +285,10 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	//
 	//
 
+	//port mapping
 	exposedPorts := make(nat.PortSet)
 	portBinding := make(nat.PortMap)
 
-	fmt.Println("POOOOOORTS")
 	for _, val := range template.Inputs {
 		if val.Type == "PORT" {
 			p, err := nat.NewPort(val.PortType, val.PortContainer)
@@ -263,7 +306,6 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 		}
 	}
 
-	//TODO port usw
 	createContainer, err := client.ContainerCreate(r.Context(),
 		&container.Config{
 			Image:        template.ImageName,
@@ -278,6 +320,7 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 		&container.HostConfig{
 			PortBindings:    portBinding,
 			PublishAllPorts: true,
+			Mounts:          mountedVolumes,
 			Resources: container.Resources{
 				Devices: []container.DeviceMapping{
 					{

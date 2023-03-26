@@ -55,14 +55,14 @@ export class VolumeBrowserController {
     });
   }
 
-  download(file) {
-    return this.$async(this.downloadAsync, file);
+  download(file, decrypt) {
+    return this.$async(this.downloadAsync, file, decrypt);
   }
-  async downloadAsync(file) {
+  async downloadAsync(file, decrypt) {
     const filePath = this.state.path === '/' ? file : `${this.state.path}/${file}`;
 
     try {
-      const data = await this.VolumeBrowserService.get(this.volumeId, filePath);
+      const data = await this.VolumeBrowserService.get(this.volumeId, filePath, decrypt);
       const downloadData = new Blob([data.file]);
       this.FileSaver.saveAs(downloadData, file);
     } catch (err) {

@@ -4,6 +4,7 @@ import { PageHeader } from '@@/PageHeader';
 import { useEnvironmentId } from '@/portainer/hooks/useEnvironmentId';
 import { useConfidentialTemplates } from '../queries';
 import { ConfidentialTemplateEntryView } from './ConfidentialTemplateEntryView';
+import { useEncryptedVolumes } from '@/react/docker/volumes/queries';
 
 export function ConfidentialTemplatesView() {
 
@@ -12,6 +13,7 @@ export function ConfidentialTemplatesView() {
     if (!templateQuery.data) {
         return null;
     }
+
 
     let title = "Confidential Templates";
 
@@ -22,14 +24,19 @@ export function ConfidentialTemplatesView() {
 
     const envId = Number(env);
 
+    //encrypted volumes
+    let encVolumeQuery = useEncryptedVolumes(envId);
+    if (!encVolumeQuery.data) {
+        return null;
+    }
 
 
     return (
         <>
             <PageHeader title={title} breadcrumbs={[{ label: 'PortainerCC' }]} />
 
-            {templateQuery.data.map((entry) => <ConfidentialTemplateEntryView key={entry.Id} template={entry} envId={envId}/>)}
-            
+            {templateQuery.data.map((entry) => <ConfidentialTemplateEntryView key={entry.Id} template={entry} envId={envId} encryptedVolumes={encVolumeQuery.data.Volumes} />)}
+
 
         </>
     );

@@ -13,9 +13,10 @@ import { useState } from 'react';
 interface Props {
     template: ConfidentialTemplate
     envId: number
+    encryptedVolumes: any //TODO any
 }
 
-export function ConfidentialTemplateEntryView({ template, envId }: Props) {
+export function ConfidentialTemplateEntryView({ template, envId, encryptedVolumes }: Props) {
 
     const [toggle, setToggle] = useState(false);
 
@@ -27,6 +28,15 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
         Inputs: template.Inputs.reduce((acc, curr) => ({ ...acc, [curr.Label]: "" }), {})
     }
 
+    let encVolOptions =
+        1 > 0 &&
+        encryptedVolumes.map((vol: any) => {
+            return (
+                <option value={vol.Name} key={vol.Name}>
+                    {vol.Name}
+                </option>
+            );
+        });
 
     let secrets = template.Inputs.filter(input => input.Type == "SECRET");
     let ports = template.Inputs.filter(input => input.Type == "PORT");
@@ -149,8 +159,9 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
                                                             <div className="col-sm-10 mx-10 input-group">
                                                                 <span className="input-group-addon">{input.Label}</span>
                                                                 <div className="col-sm-12 input-group">
-                                                                    <select className="form-control">
-                                                                        <option value="" disabled selected>Select a volume</option>
+                                                                    <select id={str} className="form-control">
+                                                                        <option key="create" value="create">Create new encrypted volume</option>
+                                                                        {encVolOptions}
                                                                     </select>
                                                                 </div>
                                                             </div>

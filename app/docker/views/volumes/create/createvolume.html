@@ -1,4 +1,5 @@
-<page-header title="'Create volume'" breadcrumbs="[{label:'Volumes', link:'docker.volumes'}, 'Add volume']"> </page-header>
+<page-header title="'Create volume'" breadcrumbs="[{label:'Volumes', link:'docker.volumes'}, 'Add volume']">
+</page-header>
 
 <div class="row">
   <div class="col-sm-12">
@@ -9,7 +10,8 @@
           <div class="form-group">
             <label for="volume_name" class="col-sm-2 col-md-1 control-label text-left">Name</label>
             <div class="col-sm-10 col-md-11">
-              <input type="text" class="form-control" ng-model="formValues.Name" id="volume_name" placeholder="e.g. myVolume" />
+              <input type="text" class="form-control" ng-model="formValues.Name" id="volume_name"
+                placeholder="e.g. myVolume" />
             </div>
           </div>
           <!-- !name-input -->
@@ -18,10 +20,12 @@
           <div class="form-group">
             <label for="volume_driver" class="col-sm-2 col-md-1 control-label text-left">Driver</label>
             <div class="col-sm-10 col-md-11">
-              <select class="form-control" ng-options="driver for driver in availableVolumeDrivers" ng-model="formValues.Driver" ng-if="availableVolumeDrivers.length > 0">
+              <select class="form-control" ng-options="driver for driver in availableVolumeDrivers"
+                ng-model="formValues.Driver" ng-if="availableVolumeDrivers.length > 0">
                 <option disabled hidden value="">Select a driver</option>
               </select>
-              <input type="text" class="form-control" ng-model="formValues.Driver" id="volume_driver" placeholder="e.g. driverName" ng-if="availableVolumeDrivers.length === 0" />
+              <input type="text" class="form-control" ng-model="formValues.Driver" id="volume_driver"
+                placeholder="e.g. driverName" ng-if="availableVolumeDrivers.length === 0" />
             </div>
           </div>
           <!-- !driver-input -->
@@ -30,7 +34,8 @@
             <div class="col-sm-12" style="margin-top: 5px">
               <label class="control-label text-left">
                 Driver options
-                <portainer-tooltip message="'Driver options are specific to the selected driver. Please refer to the selected driver documentation.'"></portainer-tooltip>
+                <portainer-tooltip
+                  message="'Driver options are specific to the selected driver. Please refer to the selected driver documentation.'"></portainer-tooltip>
               </label>
               <span class="label label-default interactive" style="margin-left: 10px" ng-click="addDriverOption()">
                 <pr-icon icon="'plus'" mode="'alt'" feather="true"></pr-icon> add driver option
@@ -55,21 +60,44 @@
             <!-- !driver-options-input-list -->
           </div>
           <!-- !driver-options -->
+          <!-- gramine protected files -->
+          <div class="form-group col-md-12">
+            <label for="usePF" class="control-label text-left"> Encrypt files (gramine protected files) </label>
+            <label class="switch" style="margin-left: 20px">
+              <input type="checkbox" name="usePF" ng-model="formValues.usePF" />
+              <i></i>
+            </label>
+            <div ng-if="formValues.usePF" class="form-group">
+              <label class="col-sm-2 col-md-1 control-label text-left">Protected Files Key</label>
+              <div class="col-sm-10 col-md-11">
+                <select class="form-control" ng-options="key.Description for key in pfKeys"
+                  ng-model="formValues.selectedPFKey">
+                  <option disabled hidden value="">Select a key</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <!-- !gramine protected files -->
           <!-- nfs-management -->
           <div class="form-group col-md-12">
-            <por-switch-field checked="formValues.NFSData.useNFS" label="'Use NFS volume'" on-change="(onUseNFSChange)"></por-switch-field>
-            <div ng-if="formValues.NFSData.useNFS" class="small text-muted" style="margin-top: 10px"> Ensure <code>nfs-utils</code> are installed on your hosts. </div>
+            <por-switch-field checked="formValues.NFSData.useNFS" label="'Use NFS volume'"
+              on-change="(onUseNFSChange)"></por-switch-field>
+            <div ng-if="formValues.NFSData.useNFS" class="small text-muted" style="margin-top: 10px"> Ensure
+              <code>nfs-utils</code> are installed on your hosts. </div>
           </div>
           <volumes-nfs-form data="formValues.NFSData" ng-show="formValues.Driver === 'local'"></volumes-nfs-form>
           <!-- !nfs-management -->
           <!-- cifs-management -->
           <div class="form-group col-md-12">
-            <por-switch-field checked="formValues.CIFSData.useCIFS" label="'Use CIFS volume'" on-change="(onUseCIFSChange)"></por-switch-field>
-            <div ng-if="formValues.CIFSData.useCIFS" class="small text-muted" style="margin-top: 10px"> Ensure <code>cifs-utils</code> are installed on your hosts. </div>
+            <por-switch-field checked="formValues.CIFSData.useCIFS" label="'Use CIFS volume'"
+              on-change="(onUseCIFSChange)"></por-switch-field>
+            <div ng-if="formValues.CIFSData.useCIFS" class="small text-muted" style="margin-top: 10px"> Ensure
+              <code>cifs-utils</code> are installed on your hosts. </div>
           </div>
           <volumes-cifs-form data="formValues.CIFSData" ng-show="formValues.Driver === 'local'"></volumes-cifs-form>
           <!-- !cifs-management -->
-          <div ng-if="applicationState.endpoint.mode.agentProxy && applicationState.endpoint.mode.provider === 'DOCKER_SWARM_MODE' && formValues.Driver === 'local'">
+          <div
+            ng-if="applicationState.endpoint.mode.agentProxy && applicationState.endpoint.mode.provider === 'DOCKER_SWARM_MODE' && formValues.Driver === 'local'">
             <div class="col-sm-12 form-section-title"> Deployment </div>
             <!-- node-selection -->
             <node-selector model="formValues.NodeName"> </node-selector>
@@ -82,17 +110,14 @@
           <div class="col-sm-12 form-section-title"> Actions </div>
           <div class="form-group">
             <div class="col-sm-12">
-              <button
-                type="button"
-                class="btn btn-primary btn-sm"
-                ng-click="create()"
+              <button type="button" class="btn btn-primary btn-sm" ng-click="create()"
                 ng-disabled="state.actionInProgress || (formValues.NFSData.useNFS && !volumeCreationForm.nfsInformationForm.$valid) || (formValues.CIFSData.useCIFS && !volumeCreationForm.cifsInformationForm.$valid)"
-                button-spinner="state.actionInProgress"
-              >
+                button-spinner="state.actionInProgress">
                 <span ng-hide="state.actionInProgress">Create the volume</span>
                 <span ng-show="state.actionInProgress">Creating volume...</span>
               </button>
-              <span class="text-danger" ng-if="state.formValidationError" style="margin-left: 5px">{{ state.formValidationError }}</span>
+              <span class="text-danger" ng-if="state.formValidationError" style="margin-left: 5px">{{
+                state.formValidationError }}</span>
             </div>
           </div>
           <!-- !actions -->
