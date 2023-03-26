@@ -1,6 +1,6 @@
 import { Formik, Field, Form } from 'formik';
 
-import { Input } from '@@/form-components/Input';
+import { Input, Select } from '@@/form-components/Input';
 import { FormControl } from '@@/form-components/FormControl';
 import { Widget } from '@@/Widget';
 import { LoadingButton } from '@@/buttons/LoadingButton';
@@ -31,11 +31,7 @@ export function ConfidentialTemplateEntryView({ template, envId, encryptedVolume
     let encVolOptions =
         1 > 0 &&
         encryptedVolumes.map((vol: any) => {
-            return (
-                <option value={vol.Name} key={vol.Name}>
-                    {vol.Name}
-                </option>
-            );
+            return { value: vol.Name, label: vol.Name }
         });
 
     let secrets = template.Inputs.filter(input => input.Type == "SECRET");
@@ -159,10 +155,9 @@ export function ConfidentialTemplateEntryView({ template, envId, encryptedVolume
                                                             <div className="col-sm-10 mx-10 input-group">
                                                                 <span className="input-group-addon">{input.Label}</span>
                                                                 <div className="col-sm-12 input-group">
-                                                                    <select id={str} className="form-control">
-                                                                        <option key="create" value="create">Create new encrypted volume</option>
-                                                                        {encVolOptions}
-                                                                    </select>
+                                                                    <Field as={Select} name={str} id={str} options={encVolOptions} />
+                                                                    {/* <option key="create" value="create">Create new encrypted volume</option> */}
+                                                                    {/* {encVolOptions} */}
                                                                 </div>
                                                             </div>
                                                         </div>
