@@ -114,15 +114,20 @@ export function ConfidentialTemplateEntryView({ template, envId }: Props) {
                                                     <>
                                                         <div className="form-group">
                                                             <div className="form-inline mx-10">
+                                                                <div className="input-group col-sm-1">
+                                                                    <div className="btn-group btn-group-sm">
+                                                                        {input.Label}
+                                                                    </div>
+                                                                </div>
                                                                 <div className="input-group col-sm-5 input-group-sm">
                                                                     <span className="input-group-addon">host</span>
-                                                                    <input type="text" className="form-control" name={str} id={str} required placeholder={input.Default} />
+                                                                    <Field as={Input} name={str} id={str} required placeholder={input.Default} />
                                                                 </div>
                                                                 <div className="input-group col-sm-5 input-group-sm">
                                                                     <span className="input-group-addon">container</span>
                                                                     <input type="text" className="form-control" readOnly value={input.PortContainer} />
                                                                 </div>
-                                                                <div className="input-group col-sm-2 input-group-sm">
+                                                                <div className="input-group col-sm-1 input-group-sm">
                                                                     <div className="btn-group btn-group-sm">
                                                                         <label className="btn btn-light">{input.PortType}</label>
                                                                     </div>
