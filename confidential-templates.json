@@ -1,0 +1,213 @@
+[
+  {
+    "ImageName": "marcely0/pcc-redis-demo",
+    "LogoURL": "https://is3-ssl.mzstatic.com/image/thumb/Purple124/v4/17/cd/a2/17cda2a0-b641-c3d0-3d22-141704a40eef/Icon.png/1200x630bb.png",
+    "TemplateName": "redis-sgx123",
+    "Inputs": [
+      {
+        "Label": "Password",
+        "Default": "pass",
+        "Type": "SECRET",
+        "SecretName": "redis_cfg",
+        "ReplacePattern": "$$$password$$$"
+      },
+      {
+        "Label": "Port1",
+        "Default": "6379",
+        "Type": "PORT",
+        "PortContainer": "6379",
+        "PortType": "tcp"
+      },
+      {
+        "Label": "logs",
+        "Default": "redis_logs",
+        "Type": "VOLUME",
+        "SecretName": "redisLogsKey"
+      },
+      {
+        "Label": "data",
+        "Default": "redis_data",
+        "Type": "VOLUME",
+        "SecretName": "redisDataKey"
+      }
+    ],
+    "Secrets": {
+      "redis_cfg": "protected-mode no\n#save \"\"\n\nbind 0.0.0.0\nport 0\ndaemonize no\npidfile /var/run/redis_6379.pid\n\nloglevel notice\nlogfile \"\"\n\ndir /var/lib/redis\ndbfilename dump.rdb\n\ntls-port 6379\ntls-cluster yes\ntls-replication yes\ntls-auth-clients no\n\ntls-cert-file /redis-cfg/redis.crt\ntls-key-file /redis-cfg/redis.key\ntls-ca-cert-file /redis-cfg/ca.crt\n\ntls-protocols \"TLSv1.3\"\ntls-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256\ntls-prefer-server-ciphers no\n\nrequirepass $$$password$$$"
+    },
+
+    "ManifestBoilerplate": {
+      "ManifestParameters": {
+        "Files": {
+          "/dev/attestation/keys/redis_cfg": {
+            "Data": "{% raw %}{{ raw .Secrets.redisConfKey.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/dev/attestation/keys/redis_data": {
+            "Data": "{% raw %}{{ raw .Secrets.redisDataKey.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/dev/attestation/keys/redis_logs": {
+            "Data": "{% raw %}{{ raw .Secrets.redisLogsKey.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/redis-cfg/redis.conf": {
+            "Data": "{% raw %}{{ raw .Secrets.redis_cfg.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/redis-cfg/redis.crt": {
+            "Data": "{% raw %}{{ pem .MarbleRun.MarbleCert.Cert }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/redis-cfg/redis.key": {
+            "Data": "{% raw %}{{ pem .MarbleRun.MarbleCert.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/redis-cfg/ca.crt": {
+            "Data": "{% raw %}{{ pem .MarbleRun.RootCA.Cert }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          }
+        },
+        "Argv": ["/usr/bin/redis-server", "/redis-cfg/redis.conf"]
+      },
+      "ManifestSecrets": {
+        "redisConfKey": {
+          "Type": "symmetric-key",
+          "Size": 128,
+          "UserDefined": false
+        },
+        "redisDataKey": {
+          "Type": "symmetric-key",
+          "Size": 128,
+          "UserDefined": true
+        },
+        "redisLogsKey": {
+          "Type": "symmetric-key",
+          "Size": 128,
+          "UserDefined": true
+        },
+        "redis_cfg": {
+          "Type": "plain",
+          "UserDefined": true
+        }
+      }
+    }
+  },
+  {
+    "ImageName": "marcely0/pcc-mongodb-demo",
+    "LogoURL": "https://newrelic.com/sites/default/files/styles/800w/public/2021-10/mongo_logo.jpg?itok=Z1PabBZB",
+    "TemplateName": "mongodb-sgx",
+    "Inputs": [
+      {
+        "Label": "Port1",
+        "Default": "27017",
+        "Type": "PORT",
+        "PortContainer": "27017",
+        "PortType": "tcp"
+      },
+      {
+        "Label": "/logs",
+        "Default": "mongodb_logs",
+        "Type": "VOLUME",
+        "SecretName": "mongodbLogsKey"
+      },
+      {
+        "Label": "/data",
+        "Default": "mongodb_data",
+        "Type": "VOLUME",
+        "SecretName": "mongodbDataKey"
+      }
+    ],
+
+    "ManifestBoilerplate": {
+      "ManifestParameters": {
+        "Files": {
+          "/dev/attestation/keys/mongodb_data": {
+            "Data": "{% raw %}{{ raw .Secrets.mongodbDataKey.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/dev/attestation/keys/mongodb_logs": {
+            "Data": "{% raw %}{{ raw .Secrets.mongodbLogsKey.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          }
+        },
+        "Argv": ["/app/mongo/bin/mongod", "--config=/app/mongod.conf"]
+      },
+      "ManifestSecrets": {
+        "mongodbDataKey": {
+          "Type": "symmetric-key",
+          "Size": 128,
+          "UserDefined": true
+        },
+        "mongodbLogsKey": {
+          "Type": "symmetric-key",
+          "Size": 128,
+          "UserDefined": true
+        }
+      }
+    }
+  },
+  {
+    "ImageName": "marcely0/gramine-mariadb",
+    "LogoURL": "https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo-vert_blue-transparent.png",
+    "TemplateName": "maria-sgx",
+    "Inputs": [
+      {
+        "Label": "Username",
+        "Default": "root",
+        "Type": "SECRET",
+        "SecretName": "init",
+        "ReplacePattern": "$$$username$$$"
+      },
+      {
+        "Label": "Password",
+        "Default": "pass",
+        "Type": "SECRET",
+        "SecretName": "init",
+        "ReplacePattern": "$$$password$$$"
+      },
+      {
+        "Label": "Port1",
+        "Default": "3306",
+        "Type": "PORT",
+        "PortContainer": "3306",
+        "PortType": "tcp"
+      }
+    ],
+    "Secrets": {
+      "init": "CREATE OR REPLACE USER $$$username$$$ IDENTIFIED BY '$$$password$$$';\n GRANT ALL PRIVILEGES ON *.* TO  $$$username$$$ ;"
+    },
+
+    "ManifestBoilerplate": {
+      "ManifestParameters": {
+        "Files": {
+          "/app/init.sql": {
+            "Data": "{% raw %}{{ raw .Secrets.init.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/dev/attestation/keys/default": {
+            "Data": "{% raw %}{{ raw .Secrets.app_defaultkey.Private }}{% endraw %}",
+            "Encoding": "string",
+            "NoTemplates": false
+          }
+        },
+        "Argv": ["/app/mariadbd", "--init-file=/app/init.sql"]
+      },
+      "ManifestSecrets": {
+        "init": {
+          "type": "plain",
+          "UserDefined": true
+        }
+      }
+    }
+  }
+]

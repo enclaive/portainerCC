@@ -1,11 +1,15 @@
 package portainercc
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	httperror "github.com/portainer/libhttp/error"
 
 	"github.com/gorilla/mux"
+	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/docker"
 	"github.com/portainer/portainer/api/http/security"
@@ -24,6 +28,40 @@ func NewHandler(bouncer *security.RequestBouncer, dataStore dataservices.DataSto
 		Router:              mux.NewRouter(),
 		DataStore:           dataStore,
 		DockerClientFactory: dockerClientFactory,
+	}
+
+	//fill with default templates
+	jsonTemplates, err := ioutil.ReadFile("/confidential-templates.json")
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var templates []ConfTempParams
+
+	err = json.Unmarshal(jsonTemplates, &templates)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for _, t := range templates {
+		templateObject := &portainer.ConfidentialTemplate{
+			ImageName:    t.ImageName,
+			LogoURL:      t.LogoURL,
+			TemplateName: t.TemplateName,
+			Inputs:       t.Inputs,
+			Secrets:      t.Secrets,
+			ManifestBoilerplate: struct {
+				ManifestParameters portainer.Parameters        "json:\"ManifestParameters\""
+				ManifestSecrets    map[string]portainer.Secret "json:\"ManifestSecrets\""
+			}(t.ManifestBoilerplate),
+		}
+
+		err = h.DataStore.ConfidentialTemplate().Create(templateObject)
+
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	restrictedRouter := h.NewRoute().Subrouter()

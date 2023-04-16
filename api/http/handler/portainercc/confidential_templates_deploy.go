@@ -2,6 +2,8 @@ package portainercc
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
@@ -11,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -113,11 +116,6 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	//create updateManifest
 	manifest := createUpdateManifest(*template, params, mrenclave, mrsigner)
 
-	jsonManifest, err := json.Marshal(manifest)
-	if err != nil {
-		return httperror.InternalServerError("Could not marshal manifest", err)
-	}
-
 	// get local docker environment
 	endpoints, err := handler.DataStore.Endpoint().Endpoints()
 	if err != nil {
@@ -143,12 +141,80 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 		}
 	}
 
+	coordinatorURLEndpoint := "update"
+	// if manifest in db is empty, create initial manifest + the deployment params
+	if reflect.DeepEqual(coordinatorDeployment.Manifest, (portainer.CoordinatorManifest{})) {
+
+		coordinatorURLEndpoint = "manifest"
+
+		//create user/portainer cert to be able to update the coordinator later
+		userCertPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
+		if err != nil {
+			return httperror.InternalServerError("unable to create user certificate private key", err)
+		}
+
+		userCertBytes, err := ra.CreateUserCert(userCertPrivKey)
+		if err != nil {
+			return httperror.InternalServerError("Could not create user certificate", err)
+		}
+
+		userCertPEM := new(bytes.Buffer)
+		pem.Encode(userCertPEM, &pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: userCertBytes,
+		})
+
+		userCertPrivKeyPEM := new(bytes.Buffer)
+		pem.Encode(userCertPrivKeyPEM, &pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(userCertPrivKey),
+		})
+
+		//add to coordinator db object - saved later
+		block, _ := pem.Decode(userCertPrivKeyPEM.Bytes())
+		coordinatorDeployment.UserPrivateKey = *block
+		block, _ = pem.Decode(userCertPEM.Bytes())
+		coordinatorDeployment.UserCert = *block
+
+		//add initial to manifest
+		manifest.Users = map[string]portainer.CoordinatorUser{
+			"portainer": {
+				Certificate: userCertPEM.String(),
+				Roles: []string{
+					"updatePackage",
+					"secretManager",
+				},
+			}}
+
+		manifest.Roles = map[string]portainer.CoordinatorRole{
+			"updatePackage": {
+				ResourceType: "Packages",
+				Actions:      []string{"UpdateSecurityVersion"},
+			},
+			"secretManager": {
+				ResourceType:  "Secrets",
+				ResourceNames: []string{},
+				Actions: []string{
+					"ReadSecret",
+					"WriteSecret",
+				},
+			},
+		}
+
+		coordinatorDeployment.Manifest = manifest
+	}
+
+	//parse manifest
+	jsonManifest, err := json.Marshal(manifest)
+	if err != nil {
+		return httperror.InternalServerError("Could not marshal manifest", err)
+	}
+
 	// https://forfuncsake.github.io/post/2017/08/trust-extra-ca-cert-in-go-app/
 	// Get the SystemCertPool, continue with an empty pool on error
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
 		rootCAs = x509.NewCertPool()
-
 	}
 
 	// encode rootCert
@@ -186,7 +252,11 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	}
 
 	cl := ra.CreateCustomClient(rootCAs, endpointUrl.Host, tlsConfig)
-	resp, err := cl.Post("https://coordinator:9001/update", "application/json", bytes.NewReader(jsonManifest))
+
+	resp, err := cl.Post("https://coordinator:9001/"+coordinatorURLEndpoint, "application/json", bytes.NewReader(jsonManifest))
+	fmt.Println("HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIEEEEEEEEEEEEER")
+	fmt.Println(resp)
+	fmt.Println("DANACH!!!!!!!!!!!!!")
 	if err != nil {
 		log.Err(err)
 		return httperror.InternalServerError("error request", err)
