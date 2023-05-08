@@ -90,11 +90,11 @@ function linuxStandaloneCommand(agentVersion: string, agentSecret: string) {
 
   return `docker run -d \\
   -p 9001:9001 ${secret}\\
-  --name portainer_agent \\
+  --name portainercc_agent \\
   --restart=always \\
   -v /var/run/docker.sock:/var/run/docker.sock \\
   -v /var/lib/docker/volumes:/var/lib/docker/volumes \\
-  portainer/agent:${agentVersion}
+  marcely0/pccagent
 `;
 }
 
@@ -124,12 +124,12 @@ function winStandaloneCommand(agentVersion: string, agentSecret: string) {
 
   return `docker run -d \\
   -p 9001:9001 ${secret}\\
-  --name portainer_agent \\
+  --name portainercc_agent \\
   --restart=always \\
   -v C:\\:C:\\host \\
   -v C:\\ProgramData\\docker\\volumes:C:\\ProgramData\\docker\\volumes \\
   -v \\\\.\\pipe\\docker_engine:\\\\.\\pipe\\docker_engine \\
-  portainer/agent:${agentVersion}
+  marcely0/pccagent
 `;
 }
 

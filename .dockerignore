@@ -4,3 +4,4 @@
 !build
 !metadata.json
 !docker-extension/build
+!confidential-templates.json

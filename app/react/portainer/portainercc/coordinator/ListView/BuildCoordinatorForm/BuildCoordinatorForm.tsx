@@ -20,7 +20,7 @@ export function BuildCoordinatorForm({ keys }: Props) {
     let title = "Build a new coordinator image"
 
     const initialValues = {
-        name: '',
+        name: 'coordinator',
         key: 0
     }
 
@@ -62,6 +62,7 @@ export function BuildCoordinatorForm({ keys }: Props) {
                                             as={Input}
                                             name="name"
                                             id="key_name"
+                                            disabled
                                             required
                                             placeholder="e.g. super coordinator"
                                         />

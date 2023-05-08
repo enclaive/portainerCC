@@ -2,7 +2,7 @@
   {
     "ImageName": "marcely0/pcc-redis-demo",
     "LogoURL": "https://is3-ssl.mzstatic.com/image/thumb/Purple124/v4/17/cd/a2/17cda2a0-b641-c3d0-3d22-141704a40eef/Icon.png/1200x630bb.png",
-    "TemplateName": "redis-sgx123",
+    "TemplateName": "redis-pcc",
     "Inputs": [
       {
         "Label": "Password",
@@ -19,68 +19,71 @@
         "PortType": "tcp"
       },
       {
-        "Label": "logs",
+        "Label": "/logs",
         "Default": "redis_logs",
         "Type": "VOLUME",
         "SecretName": "redisLogsKey"
       },
       {
-        "Label": "data",
+        "Label": "/data",
         "Default": "redis_data",
         "Type": "VOLUME",
         "SecretName": "redisDataKey"
       }
     ],
     "Secrets": {
-      "redis_cfg": "protected-mode no\n#save \"\"\n\nbind 0.0.0.0\nport 0\ndaemonize no\npidfile /var/run/redis_6379.pid\n\nloglevel notice\nlogfile \"\"\n\ndir /var/lib/redis\ndbfilename dump.rdb\n\ntls-port 6379\ntls-cluster yes\ntls-replication yes\ntls-auth-clients no\n\ntls-cert-file /redis-cfg/redis.crt\ntls-key-file /redis-cfg/redis.key\ntls-ca-cert-file /redis-cfg/ca.crt\n\ntls-protocols \"TLSv1.3\"\ntls-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256\ntls-prefer-server-ciphers no\n\nrequirepass $$$password$$$"
+      "redis_cfg": "protected-mode no\n#save \"\"\n\nbind 0.0.0.0\nport 0\ndaemonize no\npidfile /var/run/redis_6379.pid\n\nloglevel notice\nlogfile \"\"\n\ndir /var/lib/redis\ndbfilename dump.rdb\n\ntls-port 6379\ntls-cluster yes\ntls-replication yes\ntls-auth-clients no\n\ntls-cert-file /redis-cfg/redis.crt\ntls-key-file /redis-cfg/redis.key\ntls-ca-cert-file /redis-cfg/ca.crt\n\ntls-protocols \"TLSv1.3\"\ntls-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256\ntls-prefer-server-ciphers no\n\nrequirepass $$$password$$$",
+      "redisConfKey": "RANDOM_KEY"
     },
-
     "ManifestBoilerplate": {
       "ManifestParameters": {
         "Files": {
           "/dev/attestation/keys/redis_cfg": {
-            "Data": "{% raw %}{{ raw .Secrets.redisConfKey.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.redisConfKey.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/dev/attestation/keys/redis_data": {
-            "Data": "{% raw %}{{ raw .Secrets.redisDataKey.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.redisDataKey.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/dev/attestation/keys/redis_logs": {
-            "Data": "{% raw %}{{ raw .Secrets.redisLogsKey.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.redisLogsKey.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/redis-cfg/redis.conf": {
-            "Data": "{% raw %}{{ raw .Secrets.redis_cfg.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.redis_cfg.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/redis-cfg/redis.crt": {
-            "Data": "{% raw %}{{ pem .MarbleRun.MarbleCert.Cert }}{% endraw %}",
+            "Data": "{{ pem .MarbleRun.MarbleCert.Cert }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/redis-cfg/redis.key": {
-            "Data": "{% raw %}{{ pem .MarbleRun.MarbleCert.Private }}{% endraw %}",
+            "Data": "{{ pem .MarbleRun.MarbleCert.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/redis-cfg/ca.crt": {
-            "Data": "{% raw %}{{ pem .MarbleRun.RootCA.Cert }}{% endraw %}",
+            "Data": "{{ pem .MarbleRun.RootCA.Cert }}",
             "Encoding": "string",
             "NoTemplates": false
           }
         },
-        "Argv": ["/usr/bin/redis-server", "/redis-cfg/redis.conf"]
+        "Argv": [
+          "/usr/bin/redis-server",
+          "/redis-cfg/redis.conf"
+        ]
       },
       "ManifestSecrets": {
         "redisConfKey": {
           "Type": "symmetric-key",
           "Size": 128,
-          "UserDefined": false
+          "UserDefined": true
         },
         "redisDataKey": {
           "Type": "symmetric-key",
@@ -102,7 +105,7 @@
   {
     "ImageName": "marcely0/pcc-mongodb-demo",
     "LogoURL": "https://newrelic.com/sites/default/files/styles/800w/public/2021-10/mongo_logo.jpg?itok=Z1PabBZB",
-    "TemplateName": "mongodb-sgx",
+    "TemplateName": "MongoDB-pcc",
     "Inputs": [
       {
         "Label": "Port1",
@@ -124,22 +127,24 @@
         "SecretName": "mongodbDataKey"
       }
     ],
-
     "ManifestBoilerplate": {
       "ManifestParameters": {
         "Files": {
           "/dev/attestation/keys/mongodb_data": {
-            "Data": "{% raw %}{{ raw .Secrets.mongodbDataKey.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.mongodbDataKey.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/dev/attestation/keys/mongodb_logs": {
-            "Data": "{% raw %}{{ raw .Secrets.mongodbLogsKey.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.mongodbLogsKey.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           }
         },
-        "Argv": ["/app/mongo/bin/mongod", "--config=/app/mongod.conf"]
+        "Argv": [
+          "/app/mongo/bin/mongod",
+          "--config=/app/mongod.conf"
+        ]
       },
       "ManifestSecrets": {
         "mongodbDataKey": {
@@ -158,7 +163,7 @@
   {
     "ImageName": "marcely0/gramine-mariadb",
     "LogoURL": "https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo-vert_blue-transparent.png",
-    "TemplateName": "maria-sgx",
+    "TemplateName": "MariaDB-pcc",
     "Inputs": [
       {
         "Label": "Username",
@@ -185,22 +190,24 @@
     "Secrets": {
       "init": "CREATE OR REPLACE USER $$$username$$$ IDENTIFIED BY '$$$password$$$';\n GRANT ALL PRIVILEGES ON *.* TO  $$$username$$$ ;"
     },
-
     "ManifestBoilerplate": {
       "ManifestParameters": {
         "Files": {
           "/app/init.sql": {
-            "Data": "{% raw %}{{ raw .Secrets.init.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.init.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
           "/dev/attestation/keys/default": {
-            "Data": "{% raw %}{{ raw .Secrets.app_defaultkey.Private }}{% endraw %}",
+            "Data": "{{ raw .Secrets.app_defaultkey.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           }
         },
-        "Argv": ["/app/mariadbd", "--init-file=/app/init.sql"]
+        "Argv": [
+          "/app/mariadbd",
+          "--init-file=/app/init.sql"
+        ]
       },
       "ManifestSecrets": {
         "init": {

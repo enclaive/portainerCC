@@ -14,6 +14,8 @@ import { useUsers } from '@/portainer/users/queries';
 import { useUser } from '@/portainer/hooks/useUser';
 import { useKeys } from '../queries';
 import { KeyEntry } from '../types';
+import { deleteKey, getKey } from '../keys.service';
+import FileSaver from 'file-saver';
 
 const storageKey = 'portainercc-keys';
 const useStore = createStore(storageKey);
@@ -37,17 +39,23 @@ export function KeyListView() {
         throw Error("invalid key type")
     }
 
-    if (!keysQuery.data) {
+    if (!keysQuery.data || !teamsQuery.data) {
         return null;
     }
+
+    let teams = teamsQuery.data
+
+    //TODO stupid workaround
+    let entries = keysQuery.data.map(e => {
+        e.AllTeams = teams
+        return e
+    })
 
     return (
         <>
             <PageHeader title={title} breadcrumbs={[{ label: 'PortainerCC' }]} />
 
-            {teamsQuery.data && (
-                <CreateKeyForm keytype={type} teams={teamsQuery.data} />
-            )}
+            <CreateKeyForm keytype={type} teams={teams} />
 
             <Datatable
                 columns={columns}
@@ -55,7 +63,7 @@ export function KeyListView() {
                     title: title,
                     icon: Key,
                 }}
-                dataset={keysQuery.data}
+                dataset={entries}
                 settingsStore={store}
                 storageKey={storageKey}
                 emptyContentLabel="No keys found"
@@ -75,7 +83,7 @@ function TableActions({ selectedRows }: { selectedRows: KeyEntry[] }) {
             <Button
                 icon={Download}
                 color="primary"
-                disabled={selectedRows.length === 0}
+                disabled={selectedRows.length !== 1}
                 onClick={() => handleExport()}
             >
                 Export
@@ -91,15 +99,27 @@ function TableActions({ selectedRows }: { selectedRows: KeyEntry[] }) {
         </div>
     );
 
-    function handleRemove() {
-        const ids = selectedRows.map((row) => row.Id);
-        console.log("REMOVE:")
-        console.log(ids)
+    async function handleRemove() {
+        selectedRows.map(async (row) => {
+            const data = await deleteKey(row.Id)
+            console.log(data)
+        });
     }
 
-    function handleExport() {
-        const ids = selectedRows.map((row) => row.Id);
-        console.log("EXPORT:")
-        console.log(ids)
+    async function handleExport() {
+        //its only 1
+        const id = selectedRows.map((row) => row.Id)[0];
+        const data = await getKey(id);
+        console.log(data)
+        if (data && data.Export) {
+            const fileContent = new Blob([data.Export], { type: 'text/plain' });
+            let fileName = data.Description
+            if(data.KeyType == "FILE_ENC"){
+                fileName = fileName + ".pfkey"
+            }else {
+                fileName = fileName + ".pem"
+            }
+            FileSaver.saveAs(fileContent, fileName)
+        }
     }
 }

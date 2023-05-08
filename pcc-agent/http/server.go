@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -118,10 +119,10 @@ func (server *APIServer) Start(edgeMode bool) error {
 	}
 
 	go server.securityShutdown(httpServer)
-	log.Print("HIER: " + httpServer.Addr)
+	log.Info().Msg("HIER: " + httpServer.Addr)
 	// return httpServer.ListenAndServeTLS(agent.TLSCertPath, agent.TLSKeyPath)
 	go httpServer.ListenAndServeTLS(agent.TLSCertPath, agent.TLSKeyPath)
-	log.Print("HIER: " + httpServer.Addr)
+	log.Info().Msg("HIER: " + httpServer.Addr)
 	return startTCPListener(server)
 }
 
@@ -192,22 +193,26 @@ func handleConnection(clientConn net.Conn, server *APIServer) {
 		return
 	}
 
+	fmt.Println("KACKMIST")
 	log.Print(clientHello.ServerName)
 	var target string
 
 	if clientHello.ServerName == "coordinator" {
 		// TODO hardcoded
-		log.Print("CONNECTION PROXY TO COORDINATOR")
+		log.Info().Msg("CONNECTION PROXY TO COORDINATOR")
 		target = "172.20.0.20:4433"
 
 	} else {
-		log.Print("DEFAULT CONNECTION / SNI")
+		log.Info().Msg("DEFAULT CONNECTION / SNI")
 		target = server.addr + ":1337"
 	}
 
 	backendConn, err := net.DialTimeout("tcp", target, 5*time.Second)
 	if err != nil {
 		log.Print(err)
+		log.Err(err)
+		fmt.Println("ahja")
+		fmt.Println(err)
 		return
 	}
 	defer backendConn.Close()

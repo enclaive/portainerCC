@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"reflect"
 	"strconv"
 	"strings"
@@ -254,9 +255,6 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	cl := ra.CreateCustomClient(rootCAs, endpointUrl.Host, tlsConfig)
 
 	resp, err := cl.Post("https://coordinator:9001/"+coordinatorURLEndpoint, "application/json", bytes.NewReader(jsonManifest))
-	fmt.Println("HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIEEEEEEEEEEEEER")
-	fmt.Println(resp)
-	fmt.Println("DANACH!!!!!!!!!!!!!")
 	if err != nil {
 		log.Err(err)
 		return httperror.InternalServerError("error request", err)
@@ -267,12 +265,41 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 	replacedStrings := map[string]map[string]string{}
 
 	//replace secrets in files/strings secrets
-	for k := range template.Secrets {
+	for k, v := range template.Secrets {
 		replacedStrings[k] = make(map[string]string)
-		replacedStrings[k]["Key"] = template.Secrets[k]
-		for _, val := range template.Inputs {
-			if val.Type == "SECRET" && val.SecretName == k {
-				replacedStrings[k]["Key"] = strings.Replace(replacedStrings[k]["Key"], val.ReplacePattern, params.Inputs[val.Label], -1)
+
+		//workaround since userdefined keys = false can only be handled by coordinator in first manifest, so we create a random key for them here..
+		if v == "RANDOM_KEY" {
+			//generate random pf key TODO remove/rework this...
+			//gen new key
+			tempKeyFile, err := ioutil.TempFile("", "super")
+			if err != nil {
+				return httperror.InternalServerError("could not generate file key", err)
+			}
+
+			// create key with sgx
+			cmd := exec.Command("gramine-sgx-pf-crypt", "gen-key", "-w", tempKeyFile.Name())
+			_, err = cmd.Output()
+			if err != nil {
+				return httperror.InternalServerError("could not generate file key", err)
+			}
+
+			// save as base64
+			file, err := ioutil.ReadFile(tempKeyFile.Name())
+			if err != nil {
+				return httperror.InternalServerError("could not generate file key", err)
+			}
+
+			replacedStrings[k]["Key"] = base64.StdEncoding.EncodeToString(file)
+		} else {
+
+			// ! workaround
+
+			replacedStrings[k]["Key"] = template.Secrets[k]
+			for _, val := range template.Inputs {
+				if val.Type == "SECRET" && val.SecretName == k {
+					replacedStrings[k]["Key"] = strings.Replace(replacedStrings[k]["Key"], val.ReplacePattern, params.Inputs[val.Label], -1)
+				}
 			}
 		}
 		//encode secret as base64
@@ -437,5 +464,5 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 		return httperror.InternalServerError("could not remove container from bridge network", err)
 	}
 
-	return response.JSON(w, http.StatusOK)
+	return response.JSON(w, createContainer.ID)
 }

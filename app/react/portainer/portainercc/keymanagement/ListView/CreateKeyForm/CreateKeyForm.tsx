@@ -10,6 +10,7 @@ import { TeamsSelector } from '@@/TeamsSelector';
 import { Team } from '../../../../users/teams/types'
 import { FormValues } from './types';
 import { createKey } from '../../keys.service';
+import { useState } from 'react';
 
 interface Props {
     keytype: string;
@@ -25,6 +26,8 @@ export function CreateKeyForm({ keytype, teams }: Props) {
     } else {
         throw Error("invalid key type")
     }
+
+    const [file, setFile] = useState<File>();
 
     const initialValues = {
         description: '',
@@ -58,7 +61,6 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                 <Form
                                     className="form-horizontal"
                                     onSubmit={handleSubmit}
-                                    noValidate
                                 >
                                     <FormControl
                                         inputId="key_description"
@@ -85,7 +87,20 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                             value={values.teamAccessPolicies}
                                             onChange={(values) => setFieldValue('teamAccessPolicies', values)}
                                             teams={teams}
-                                            placeholder="Select one or more teams to access the key"
+                                            placeholder="Grant one or more teams access"
+                                        />
+                                    </FormControl>
+
+                                    <FormControl
+                                        inputId="key_import"
+                                        label="Import"
+                                    >
+
+                                        <Field
+                                            onChange={(event: any) => setFile(event.target.files[0])}
+                                            type="File"
+                                            name="import"
+                                            id="key_import"
                                         />
                                     </FormControl>
 
@@ -101,15 +116,6 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                                                 <Icon icon="plus" feather size="md" />
                                                 Create
                                             </LoadingButton>
-                                            <LoadingButton
-                                                disabled={!isValid}
-                                                data-cy="team-createTeamButton"
-                                                isLoading={isSubmitting}
-                                                loadingText="Creating team..."
-                                            >
-                                                <Icon icon="upload" feather size="md" />
-                                                Import
-                                            </LoadingButton>
                                         </div>
                                     </div>
                                 </Form>
@@ -122,6 +128,7 @@ export function CreateKeyForm({ keytype, teams }: Props) {
     );
 
     async function handleSubmit(values: FormValues) {
+        console.log(values)
         //TODO
         let access = values.teamAccessPolicies.reduce((prev: any, current: any) => {
             return {
@@ -131,8 +138,28 @@ export function CreateKeyForm({ keytype, teams }: Props) {
                 }
             }
         }, {})
-        const data = await createKey(keytype, values.description, access)
-        console.log(data);
+
+        if (file) {
+            let content: string = await readFileContent(file)
+            const data = await createKey(keytype, values.description, access, content)
+            console.log(data);
+        } else {
+            const data = await createKey(keytype, values.description, access)
+            console.log(data);
+        }
+        
         return null;
     }
+
+    function readFileContent(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            var fr = new FileReader();
+            fr.onload = () => {
+                resolve(fr.result as string);
+            }
+            fr.onerror = reject;
+            fr.readAsText(file);
+        })
+    }
+
 }
