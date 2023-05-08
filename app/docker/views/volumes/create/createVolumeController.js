@@ -1,6 +1,9 @@
+import _ from 'lodash-es';
+import { getKeys } from '@/react/portainer/portainercc/keymanagement/keys.service';
 import { AccessControlFormData } from '../../../../portainer/components/accessControlForm/porAccessControlFormModel';
 import { VolumesNFSFormData } from '../../../components/volumesNFSForm/volumesNFSFormModel';
 import { VolumesCIFSFormData } from '../../../components/volumesCIFSForm/volumesCifsFormModel';
+
 
 angular.module('portainer.docker').controller('CreateVolumeController', [
   '$q',
@@ -21,6 +24,8 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
       NodeName: null,
       NFSData: new VolumesNFSFormData(),
       CIFSData: new VolumesCIFSFormData(),
+      usePF: false,
+      selectedPFKey: null,
     };
 
     $scope.state = {
@@ -126,6 +131,15 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
       HttpRequestHelper.setPortainerAgentTargetHeader(nodeName);
 
       $scope.state.actionInProgress = true;
+
+      //if gramine encryption enabled, add encryption and key id as volume labels
+      if ($scope.formValues.usePF && $scope.formValues.selectedPFKey) {
+        volumeConfiguration.Labels = {
+          encrypted: "true",
+          pfEncryptionKeyId: $scope.formValues.selectedPFKey.Id.toString()
+        }
+      }
+
       VolumeService.createVolume(volumeConfiguration)
         .then(function success(data) {
           const userId = userDetails.ID;
@@ -147,13 +161,18 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
     function initView() {
       var apiVersion = $scope.applicationState.endpoint.apiVersion;
 
-      PluginService.volumePlugins(apiVersion < 1.25)
+      $q.all({
+        keys: getKeys("FILE_ENC"),
+        volumes: PluginService.volumePlugins(apiVersion < 1.25)
+      })
         .then(function success(data) {
-          $scope.availableVolumeDrivers = data;
+          $scope.pfKeys = _.orderBy(data.keys, 'Description', 'asc');
+          console.log($scope.pfKeys)
+          $scope.availableVolumeDrivers = data.volumes;
+
+        }).catch(function error(err) {
+          Notifications.error('Failure', err, 'Unable to retrieve keys or volume drivers');
         })
-        .catch(function error(err) {
-          Notifications.error('Failure', err, 'Unable to retrieve volume drivers');
-        });
     }
 
     initView();

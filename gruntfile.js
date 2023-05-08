@@ -179,6 +179,7 @@ function shell_run_container() {
       -v /var/run/docker.sock:/var/run/docker.sock:z \
       -v /var/run/docker.sock:/var/run/alternative.sock:z \
       -v /tmp:/tmp \
+      -v ${portainerRoot}/confidential-templates.json:/confidential-templates.json \
       --name portainer \
       sgxdcaprastuff/gramine-os:latest \
       /app/portainer ${portainerFlags}

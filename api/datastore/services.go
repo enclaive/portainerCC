@@ -9,6 +9,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/dataservices/apikeyrepository"
+	"github.com/portainer/portainer/api/dataservices/confidentialtemplate"
 	"github.com/portainer/portainer/api/dataservices/coordinator"
 	coordoinatordeployment "github.com/portainer/portainer/api/dataservices/coordinatordeployment"
 	"github.com/portainer/portainer/api/dataservices/customtemplate"
@@ -82,6 +83,7 @@ type Store struct {
 	WebhookService               *webhook.Service
 	KeyService                   *key.Service
 	SecureImageService           *secureimage.Service
+	ConfidentialTemplateService  *confidentialtemplate.Service
 }
 
 func (store *Store) initServices() error {
@@ -277,6 +279,12 @@ func (store *Store) initServices() error {
 	}
 	store.SecureImageService = secureImageService
 
+	confidentialTemplateService, err := confidentialtemplate.NewService(store.connection)
+	if err != nil {
+		return err
+	}
+	store.ConfidentialTemplateService = confidentialTemplateService
+
 	return nil
 }
 
@@ -419,6 +427,10 @@ func (store *Store) Key() dataservices.KeyService {
 
 func (store *Store) SecureImage() dataservices.SecureImageService {
 	return store.SecureImageService
+}
+
+func (store *Store) ConfidentialTemplate() dataservices.ConfidentialTemplateService {
+	return store.ConfidentialTemplateService
 }
 
 type storeExport struct {

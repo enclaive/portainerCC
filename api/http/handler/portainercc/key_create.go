@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -13,7 +13,6 @@ import (
 	"math"
 	"math/big"
 	"net/http"
-	"os"
 	"os/exec"
 	"sync"
 
@@ -85,7 +84,7 @@ func (handler *Handler) createKey(w http.ResponseWriter, r *http.Request) *httpe
 			if err != nil {
 				return httperror.InternalServerError("could not generate file key", err)
 			}
-			defer os.Remove(tempKeyFile.Name())
+			// defer os.Remove(tempKeyFile.Name())
 
 			//create key with sgx
 			cmd := exec.Command("gramine-sgx-pf-crypt", "gen-key", "-w", tempKeyFile.Name())
@@ -94,13 +93,13 @@ func (handler *Handler) createKey(w http.ResponseWriter, r *http.Request) *httpe
 				return httperror.InternalServerError("could not generate file key", err)
 			}
 
-			//save hex
+			//save as base64
 			file, err := ioutil.ReadFile(tempKeyFile.Name())
 			if err != nil {
 				return httperror.InternalServerError("could not generate file key", err)
 			}
 
-			keyObject.PFKey = hex.EncodeToString(file)
+			keyObject.PFKey = base64.StdEncoding.EncodeToString(file)
 		}
 	} else {
 		return httperror.InternalServerError("invalid key type", err)

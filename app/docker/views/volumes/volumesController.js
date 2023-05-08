@@ -49,6 +49,7 @@ angular.module('portainer.docker').controller('VolumesController', [
       $q.all({
         attached: VolumeService.volumes({ filters: { dangling: ['false'] } }),
         dangling: VolumeService.volumes({ filters: { dangling: ['true'] } }),
+        encrypted: VolumeService.volumes({ filters: { label: ['encrypted=true'] } }),
         services: endpointProvider === 'DOCKER_SWARM_MODE' && endpointRole === 'MANAGER' ? ServiceService.services() : [],
       })
         .then(function success(data) {
@@ -57,11 +58,21 @@ angular.module('portainer.docker').controller('VolumesController', [
           $scope.volumes = data.attached
             .map(function (volume) {
               volume.dangling = false;
+              if (data.encrypted.some(function (e) {
+                return e.Id == volume.Id;
+              })) {
+                volume.encrypted = true;
+              }
               return volume;
             })
             .concat(
               data.dangling.map(function (volume) {
                 volume.dangling = true;
+                if (data.encrypted.some(function (e) {
+                  return e.Id == volume.Id;
+                })) {
+                  volume.encrypted = true;
+                }
                 if (VolumeHelper.isVolumeUsedByAService(volume, services)) {
                   volume.dangling = false;
                 }

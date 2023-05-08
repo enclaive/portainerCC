@@ -1,3 +1,5 @@
+import { Team } from '../../users/teams/types';
+
 export type KeyId = number;
 
 export type KeyEntry = {
@@ -5,4 +7,6 @@ export type KeyEntry = {
   KeyType?: string;
   Description: string;
   TeamAccessPolicies: any;
+  Export?: string;
+  AllTeams: Team[];
 };

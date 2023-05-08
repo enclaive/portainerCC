@@ -53,6 +53,7 @@ type (
 		Webhook() WebhookService
 		Key() KeyService
 		SecureImage() SecureImageService
+		ConfidentialTemplate() ConfidentialTemplateService
 	}
 
 	// CoordinatorService for managing coordinators
@@ -353,6 +354,13 @@ type (
 
 	SecureImageService interface {
 		SecureImages() ([]portainer.SecureImage, error)
+		BucketName() string
+	}
+
+	ConfidentialTemplateService interface {
+		ConfidentialTemplate(ID portainer.ConfidentialTemplateId) (*portainer.ConfidentialTemplate, error)
+		ConfidentialTemplates() ([]portainer.ConfidentialTemplate, error)
+		Create(conftemplateObject *portainer.ConfidentialTemplate) error
 		BucketName() string
 	}
 )

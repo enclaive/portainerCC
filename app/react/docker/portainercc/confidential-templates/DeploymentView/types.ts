@@ -5,3 +5,9 @@ export interface FormValues {
   ImageID: string,
 }
 
+export interface DeployConfidentialTemplateFormValues {
+  Id: number;
+  EnvId: number;
+  Name: string;
+  Inputs: Object;
+}

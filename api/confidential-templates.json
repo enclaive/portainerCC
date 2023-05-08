@@ -1,0 +1,40 @@
+[
+    {
+        "ImageName": "sgxdcaprastuff/gramine-mariadb",
+        "LogoURL": "https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo-vert_blue-transparent.png",
+        "TemplateName": "mariatemplate",
+        "Inputs": [
+            "username",
+            "password"
+        ],
+        "Secrets": {
+            "init": "CREATE OR REPLACE USER $$$username$$$ IDENTIFIED BY '$$$password$$$';\n GRANT ALL PRIVILEGES ON *.* TO  $$$username$$$ ;"
+        },
+        "ManifestBoilerplate": {
+            "ManifestParameters": {
+                "Files": {
+                    "/app/init.sql": {
+                        "Data": "{{ raw .Secrets.init.Private }}",
+                        "Encoding": "string",
+                        "NoTemplates": false
+                    },
+                    "/dev/attestation/keys/default": {
+                        "Data": "{{ raw .Secrets.app_defaultkey.Private }}",
+                        "Encoding": "string",
+                        "NoTemplates": false
+                    }
+                },
+                "Argv": [
+                    "/app/mariadbd",
+                    "--init-file=/app/init.sql"
+                ]
+            },
+            "ManifestSecrets": {
+                "init": {
+                    "type": "plain",
+                    "UserDefined": true
+                }
+            }
+        }
+    }
+]

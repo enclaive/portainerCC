@@ -26,8 +26,8 @@ function VolumeBrowserServiceFactory(StateManager, Browse, BrowseVersion1, API_E
     return getBrowseService().ls({ volumeID: volumeId, path, version: getAgentApiVersion() }).$promise;
   }
 
-  function get(volumeId, path) {
-    return getBrowseService().get({ volumeID: volumeId, path, version: getAgentApiVersion() }).$promise;
+  function get(volumeId, path, decrypt) {
+    return getBrowseService().get({ volumeID: volumeId, path, decrypt: decrypt, version: getAgentApiVersion() }).$promise;
   }
 
   function deletePath(volumeId, path) {

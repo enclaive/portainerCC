@@ -271,6 +271,7 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		resp, err := client.Post("https://coordinator:9001/update", "application/json", bytes.NewReader(jsonManifest))
 		if err != nil {
 			log.Err(err)
+			return httperror.InternalServerError("error request", err)
 		}
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
@@ -288,6 +289,14 @@ func (handler *Handler) raServiceAdd(w http.ResponseWriter, r *http.Request) *ht
 		}
 
 		client = CreateCustomClient(rootCAs, endpointUrl.Host, tlsConfig)
+
+		fmt.Println("HIER")
+		fmt.Println("HIER")
+		fmt.Println("HIER")
+		fmt.Println(secrets)
+		fmt.Println("HIER")
+		fmt.Println("HIER")
+		fmt.Println("HIER")
 
 		// send secrets to coordinator
 		secretsResp, err := client.Post("https://coordinator:9001/secrets", "application/json", bytes.NewReader(secretsBodyJson))
@@ -353,6 +362,11 @@ func CreateCustomClient(rootCAs *x509.CertPool, endpointUrl string, tlsConfig *t
 	}
 
 	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("HIER IST WICHTIG DAS WAS STEHT")
+		fmt.Println("")
+		fmt.Println(endpointUrl)
 		log.Info().Msg(endpointUrl)
 		if addr == "coordinator:9001" {
 			log.Info().Msg("Ich bin eine andere Adresse")
