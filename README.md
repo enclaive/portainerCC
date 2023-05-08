@@ -65,10 +65,12 @@ You can mount your own templates with the following parameter when you start you
 You can check out some of the How-Tos:
 
 [Step by Step guide to set up PortainerCC with an PortainerCC Agent](https://github.com/enclaive/portainerCC/wiki/PortainerCC-Full-Guide)
+[Create a confidential Application for Portainer.cc](https://github.com/enclaive/portainerCC/wiki/PortainerCC-Create-Template)
+
 
 ### Remote Attestation and Secret Provisioning
 
-[Step by Step guide to run MariaDB in PortainerCC](https://github.com/enclaive/portainerCC/wiki/PortainerCC-MariaDB-Guide)
+[Deprecated - Step by Step guide to run MariaDB in PortainerCC](https://github.com/enclaive/portainerCC/wiki/PortainerCC-MariaDB-Guide)
 
 ## Licence
 
