@@ -74,10 +74,7 @@
             "NoTemplates": false
           }
         },
-        "Argv": [
-          "/usr/bin/redis-server",
-          "/redis-cfg/redis.conf"
-        ]
+        "Argv": ["/usr/bin/redis-server", "/redis-cfg/redis.conf"]
       },
       "ManifestSecrets": {
         "redisConfKey": {
@@ -141,10 +138,7 @@
             "NoTemplates": false
           }
         },
-        "Argv": [
-          "/app/mongo/bin/mongod",
-          "--config=/app/mongod.conf"
-        ]
+        "Argv": ["/app/mongo/bin/mongod", "--config=/app/mongod.conf"]
       },
       "ManifestSecrets": {
         "mongodbDataKey": {
@@ -204,10 +198,7 @@
             "NoTemplates": false
           }
         },
-        "Argv": [
-          "/app/mariadbd",
-          "--init-file=/app/init.sql"
-        ]
+        "Argv": ["/app/mariadbd", "--init-file=/app/init.sql"]
       },
       "ManifestSecrets": {
         "init": {

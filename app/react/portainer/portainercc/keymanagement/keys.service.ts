@@ -30,11 +30,11 @@ export async function deleteKey(id: number) {
   }
 }
 
-export async function updateKey(id: number, access: any){
+export async function updateKey(id: number, access: any) {
   try {
     let payload: any = {
-      TeamAccessPolicies: access
-    }
+      TeamAccessPolicies: access,
+    };
 
     const { data } = await axios.post<KeyEntry[]>(buildUrl(id), payload);
     return data;
@@ -43,16 +43,21 @@ export async function updateKey(id: number, access: any){
   }
 }
 
-export async function createKey(type: string, desc: string, access: any, file?: string) {
+export async function createKey(
+  type: string,
+  desc: string,
+  access: any,
+  file?: string
+) {
   try {
     let payload: any = {
       KeyType: type,
       Description: desc,
-      TeamAccessPolicies: access
-    }
+      TeamAccessPolicies: access,
+    };
 
     if (file) {
-      payload.Data = file
+      payload.Data = file;
     }
 
     const { data } = await axios.post<KeyEntry[]>(buildUrl(), payload);
@@ -62,8 +67,13 @@ export async function createKey(type: string, desc: string, access: any, file?: 
   }
 }
 
-export async function importKey(type: string, desc: string, access: any, data: string) {
-  return createKey(type, desc, access, data)
+export async function importKey(
+  type: string,
+  desc: string,
+  access: any,
+  data: string
+) {
+  return createKey(type, desc, access, data);
 }
 
 function buildUrl(id?: KeyId) {

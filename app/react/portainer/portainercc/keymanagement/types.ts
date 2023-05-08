@@ -1,4 +1,4 @@
-import { Team } from "../../users/teams/types";
+import { Team } from '../../users/teams/types';
 
 export type KeyId = number;
 
@@ -8,5 +8,5 @@ export type KeyEntry = {
   Description: string;
   TeamAccessPolicies: any;
   Export?: string;
-  AllTeams: Team[]
+  AllTeams: Team[];
 };

@@ -47,7 +47,7 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook -o ./dist/storybook",
     "analyze-webpack": "webpack --config ./webpack/webpack.analyze.js",
-    "mist":"grunt release"
+    "mist": "grunt release"
   },
   "scriptsComments": {
     "build": "Build the entire app (backend/frontend) in development mode",
