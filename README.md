@@ -10,6 +10,7 @@
   - [Prerequisites](#prerequisites)
   - [Install PortainerCC](#install-portainercc)
   - [Remote Attestation and Secret Provisioning](#remote-attestation-and-secret-provisioning)
+- [How-tos](#how-tos)
 - [Licence](#licence)
 
 ## About The Project
@@ -45,8 +46,25 @@ For Portainer.cc to work, you need to make sure that all environments you want t
 To install Portainer.cc, run the following command:
 
 ```
-docker run -d -p 8000:8000 -p 9443:9443 --name portainercc --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data sgxdcaprastuff/portainercc
+docker run -d -p 8000:8000 -p 9000:9000 -p 9443:9443 \
+-v /var/run/docker.sock:/var/run/docker.sock:z \
+-v /var/run/docker.sock:/var/run/alternative.sock:z \
+-v /tmp:/tmp \
+-v pccdata:/data \
+--name portainerCC \
+marcely0/pcc
 ```
+
+The Portainer.cc Image comes with some predefined confidential templates.
+You can mount your own templates with the following parameter when you start your Container:
+```
+-v ./temps.json:/confidential-templates.json 
+```
+
+### How-Tos
+You can check out some of the How-Tos:
+
+[Step by Step guide to set up PortainerCC with an PortainerCC Agent](https://github.com/enclaive/portainerCC/wiki/PortainerCC-Full-Guide)
 
 ### Remote Attestation and Secret Provisioning
 
