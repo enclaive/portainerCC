@@ -1,0 +1,2 @@
+FROM marcely0/pcc-coordinator
+LABEL pcc.mrenclave=ec9d6af856c81eb6920920e2747d8d09a84597618901404e30abf2d4e5877ed7 pcc.mrsigner=59b6eb92ab6da0e42ce6f2b1877ceb603fe23fde52a36a7b28bb4a1277b04df4

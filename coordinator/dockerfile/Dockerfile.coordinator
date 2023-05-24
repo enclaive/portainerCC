@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:experimental
 
-FROM ghcr.io/edgelesssys/edgelessrt-dev AS build
+FROM ghcr.io/edgelesssys/edgelessrt-dev:v0.3.8 AS build
 ARG signingkey
 # RUN echo "$signingkey"
 COPY . /coordinator

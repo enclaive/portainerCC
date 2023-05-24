@@ -29,11 +29,16 @@
         "Default": "redis_data",
         "Type": "VOLUME",
         "SecretName": "redisDataKey"
+      },
+      {
+        "Label": "/config",
+        "Default": "redis_cfg",
+        "Type": "VOLUME",
+        "SecretName": "redisConfKey"
       }
     ],
     "Secrets": {
-      "redis_cfg": "protected-mode no\n#save \"\"\n\nbind 0.0.0.0\nport 0\ndaemonize no\npidfile /var/run/redis_6379.pid\n\nloglevel notice\nlogfile \"\"\n\ndir /var/lib/redis\ndbfilename dump.rdb\n\ntls-port 6379\ntls-cluster yes\ntls-replication yes\ntls-auth-clients no\n\ntls-cert-file /redis-cfg/redis.crt\ntls-key-file /redis-cfg/redis.key\ntls-ca-cert-file /redis-cfg/ca.crt\n\ntls-protocols \"TLSv1.3\"\ntls-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256\ntls-prefer-server-ciphers no\n\nrequirepass $$$password$$$",
-      "redisConfKey": "RANDOM_KEY"
+      "redis_cfg": "protected-mode no\n#save \"\"\n\nbind 0.0.0.0\nport 0\ndaemonize no\npidfile /var/run/redis_6379.pid\n\nloglevel notice\nlogfile \"\"\n\ndir /var/lib/redis\ndbfilename dump.rdb\n\ntls-port 6379\ntls-cluster yes\ntls-replication yes\ntls-auth-clients no\n\ntls-cert-file /redis-cfg/redis.crt\ntls-key-file /redis-cfg/redis.key\ntls-ca-cert-file /redis-cfg/ca.crt\n\ntls-protocols \"TLSv1.3\"\ntls-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256\ntls-prefer-server-ciphers no\n\nrequirepass $$$password$$$"
     },
     "ManifestBoilerplate": {
       "ManifestParameters": {
@@ -74,7 +79,10 @@
             "NoTemplates": false
           }
         },
-        "Argv": ["/usr/bin/redis-server", "/redis-cfg/redis.conf"]
+        "Argv": [
+          "/usr/bin/redis-server",
+          "/redis-cfg/redis.conf"
+        ]
       },
       "ManifestSecrets": {
         "redisConfKey": {
@@ -138,7 +146,10 @@
             "NoTemplates": false
           }
         },
-        "Argv": ["/app/mongo/bin/mongod", "--config=/app/mongod.conf"]
+        "Argv": [
+          "/app/mongo/bin/mongod",
+          "--config=/app/mongod.conf"
+        ]
       },
       "ManifestSecrets": {
         "mongodbDataKey": {
@@ -155,7 +166,7 @@
     }
   },
   {
-    "ImageName": "marcely0/gramine-mariadb",
+    "ImageName": "marcely0/pcc-mariadb-demo",
     "LogoURL": "https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo-vert_blue-transparent.png",
     "TemplateName": "MariaDB-pcc",
     "Inputs": [
@@ -174,6 +185,18 @@
         "ReplacePattern": "$$$password$$$"
       },
       {
+        "Label": "/data",
+        "Default": "mariadb_data",
+        "Type": "VOLUME",
+        "SecretName": "mariadbDataKey"
+      },
+      {
+        "Label": "/secrets",
+        "Default": "mariadbd_secrets",
+        "Type": "VOLUME",
+        "SecretName": "mariadbSecretsKey"
+      },
+      {
         "Label": "Port1",
         "Default": "3306",
         "Type": "PORT",
@@ -187,22 +210,40 @@
     "ManifestBoilerplate": {
       "ManifestParameters": {
         "Files": {
-          "/app/init.sql": {
+          "/secrets/init.sql": {
             "Data": "{{ raw .Secrets.init.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           },
-          "/dev/attestation/keys/default": {
-            "Data": "{{ raw .Secrets.app_defaultkey.Private }}",
+          "/dev/attestation/keys/mariadbd_secrets": {
+            "Data": "{{ raw .Secrets.mariadbSecretsKey.Private }}",
+            "Encoding": "string",
+            "NoTemplates": false
+          },
+          "/dev/attestation/keys/mariadbd_data": {
+            "Data": "{{ raw .Secrets.mariadbDataKey.Private }}",
             "Encoding": "string",
             "NoTemplates": false
           }
         },
-        "Argv": ["/app/mariadbd", "--init-file=/app/init.sql"]
+        "Argv": [
+          "/app/mariadbd",
+          "--init-file=/secrets/init.sql"
+        ]
       },
       "ManifestSecrets": {
         "init": {
           "type": "plain",
+          "UserDefined": true
+        },
+        "mariadbSecretsKey": {
+          "Type": "symmetric-key",
+          "Size": 128,
+          "UserDefined": true
+        },
+        "mariadbDataKey": {
+          "Type": "symmetric-key",
+          "Size": 128,
           "UserDefined": true
         }
       }

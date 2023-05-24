@@ -301,9 +301,9 @@ func (handler *Handler) deployConfidentialTemplate(w http.ResponseWriter, r *htt
 					replacedStrings[k]["Key"] = strings.Replace(replacedStrings[k]["Key"], val.ReplacePattern, params.Inputs[val.Label], -1)
 				}
 			}
+			//encode secret as base64
+			replacedStrings[k]["Key"] = base64.StdEncoding.EncodeToString([]byte(replacedStrings[k]["Key"]))
 		}
-		//encode secret as base64
-		replacedStrings[k]["Key"] = base64.StdEncoding.EncodeToString([]byte(replacedStrings[k]["Key"]))
 	}
 
 	//create Volumemapping and get file encryption keys
