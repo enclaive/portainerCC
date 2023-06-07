@@ -134,9 +134,14 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
 
       //if gramine encryption enabled, add encryption and key id as volume labels
       if ($scope.formValues.usePF && $scope.formValues.selectedPFKey) {
-        volumeConfiguration.Labels = {
-          encrypted: "true",
-          pfEncryptionKeyId: $scope.formValues.selectedPFKey.Id.toString()
+        //create new key or use existing
+        if ($scope.formValues.selectedPFKey.Id == 0) {
+          volumeConfiguration.createKey = true;
+        } else {
+          volumeConfiguration.Labels = {
+            encrypted: "true",
+            pfEncryptionKeyId: $scope.formValues.selectedPFKey.Id.toString()
+          }
         }
       }
 
@@ -166,7 +171,7 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
         volumes: PluginService.volumePlugins(apiVersion < 1.25)
       })
         .then(function success(data) {
-          $scope.pfKeys = _.orderBy(data.keys, 'Description', 'asc');
+          $scope.pfKeys = [{ Id: 0, Description: "Create new key" }, ..._.orderBy(data.keys, 'Description', 'asc').map((key) => { return { Id: key.Id, Description: key.Description } })];
           console.log($scope.pfKeys)
           $scope.availableVolumeDrivers = data.volumes;
 

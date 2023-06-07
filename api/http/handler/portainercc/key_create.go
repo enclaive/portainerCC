@@ -19,6 +19,7 @@ import (
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/dataservices"
 )
 
 type KeyParams struct {
@@ -43,72 +44,10 @@ func (handler *Handler) createKey(w http.ResponseWriter, r *http.Request) *httpe
 		return httperror.BadRequest("request body malefomred", err)
 	}
 
-	keyObject := &portainer.Key{
-		KeyType:            params.KeyType,
-		Description:        params.Description,
-		TeamAccessPolicies: params.TeamAccessPolicies,
-	}
+	keyObject, errx := CreateNewKey(handler.DataStore.Key(), params.KeyType, params.Description, params.TeamAccessPolicies, params.Data)
 
-	//handle key type
-	if keyObject.KeyType == "SIGNING" {
-		if params.Data != "" {
-			//IMPORT data as key
-			block, _ := pem.Decode([]byte(params.Data))
-			if block == nil {
-				return httperror.InternalServerError("could not import rsa key, invalid pem", err)
-			}
-
-			privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-			if block == nil {
-				return httperror.InternalServerError("could not import rsa key", err)
-			}
-
-			keyObject.SigningKey = privKey
-		} else {
-			//gen new key
-			privKey, err := GenerateMultiPrimeKeyE3(rand.Reader, 2, 3072)
-			if err != nil {
-				return httperror.InternalServerError("could not generate rsa key", err)
-			}
-
-			keyObject.SigningKey = privKey
-		}
-	} else if keyObject.KeyType == "FILE_ENC" {
-		//gramine pf file key
-		if params.Data != "" {
-			//IMPORT data as key - TODO maybe hex check/size
-			keyObject.PFKey = params.Data
-		} else {
-			//gen new key
-			tempKeyFile, err := ioutil.TempFile("", "super")
-			if err != nil {
-				return httperror.InternalServerError("could not generate file key", err)
-			}
-			// defer os.Remove(tempKeyFile.Name())
-
-			//create key with sgx
-			cmd := exec.Command("gramine-sgx-pf-crypt", "gen-key", "-w", tempKeyFile.Name())
-			_, err = cmd.Output()
-			if err != nil {
-				return httperror.InternalServerError("could not generate file key", err)
-			}
-
-			//save as base64
-			file, err := ioutil.ReadFile(tempKeyFile.Name())
-			if err != nil {
-				return httperror.InternalServerError("could not generate file key", err)
-			}
-
-			keyObject.PFKey = base64.StdEncoding.EncodeToString(file)
-		}
-	} else {
-		return httperror.InternalServerError("invalid key type", err)
-	}
-
-	err = handler.DataStore.Key().Create(keyObject)
-
-	if err != nil {
-		return httperror.InternalServerError("could save key in db", err)
+	if errx != nil {
+		return errx
 	}
 
 	res := KeyResponse{
@@ -119,6 +58,78 @@ func (handler *Handler) createKey(w http.ResponseWriter, r *http.Request) *httpe
 	}
 
 	return response.JSON(w, res)
+}
+
+func CreateNewKey(keyService dataservices.KeyService, keyType string, description string, access portainer.TeamAccessPolicies, importData string) (*portainer.Key, *httperror.HandlerError) {
+	keyObject := &portainer.Key{
+		KeyType:            keyType,
+		Description:        description,
+		TeamAccessPolicies: access,
+	}
+
+	//handle key type
+	if keyObject.KeyType == "SIGNING" {
+		if importData != "" {
+			//IMPORT data as key
+			block, _ := pem.Decode([]byte(importData))
+			if block == nil {
+				return nil, httperror.InternalServerError("could not import rsa key, invalid pem", nil)
+			}
+
+			privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+			if block == nil {
+				return nil, httperror.InternalServerError("could not import rsa key", err)
+			}
+
+			keyObject.SigningKey = privKey
+		} else {
+			//gen new key
+			privKey, err := GenerateMultiPrimeKeyE3(rand.Reader, 2, 3072)
+			if err != nil {
+				return nil, httperror.InternalServerError("could not generate rsa key", err)
+			}
+
+			keyObject.SigningKey = privKey
+		}
+	} else if keyObject.KeyType == "FILE_ENC" {
+		//gramine pf file key
+		if importData != "" {
+			//IMPORT data as key - TODO maybe hex check/size
+			keyObject.PFKey = importData
+		} else {
+			//gen new key
+			tempKeyFile, err := ioutil.TempFile("", "super")
+			if err != nil {
+				return nil, httperror.InternalServerError("could not generate file key", err)
+			}
+			// defer os.Remove(tempKeyFile.Name())
+
+			//create key with sgx
+			cmd := exec.Command("gramine-sgx-pf-crypt", "gen-key", "-w", tempKeyFile.Name())
+			_, err = cmd.Output()
+			if err != nil {
+				return nil, httperror.InternalServerError("could not generate file key", err)
+			}
+
+			//save as base64
+			file, err := ioutil.ReadFile(tempKeyFile.Name())
+			if err != nil {
+				return nil, httperror.InternalServerError("could not generate file key", err)
+			}
+
+			keyObject.PFKey = base64.StdEncoding.EncodeToString(file)
+		}
+	} else {
+		return nil, httperror.InternalServerError("invalid key type", nil)
+	}
+
+	err := keyService.Create(keyObject)
+
+	if err != nil {
+		return nil, httperror.InternalServerError("could save key in db", err)
+	}
+
+	return keyObject, nil
 }
 
 ///// fixed public exponent of 3 for sgx signing key

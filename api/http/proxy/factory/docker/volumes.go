@@ -1,15 +1,19 @@
 package docker
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"path"
 
 	"github.com/docker/docker/client"
 
 	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/http/handler/portainercc"
 	"github.com/portainer/portainer/api/http/proxy/factory/utils"
 	"github.com/portainer/portainer/api/http/security"
 	"github.com/portainer/portainer/api/internal/authorization"
@@ -143,6 +147,43 @@ func (transport *Transport) decorateVolumeResourceCreationOperation(request *htt
 		if err == nil {
 			return nil, errors.New("a volume with the same name already exists")
 		}
+	}
+
+	//check if createEncryptedVolume is set
+	var origBody []byte = nil
+	if request.Body != nil {
+		origBody, _ = ioutil.ReadAll(request.Body)
+		request.Body = ioutil.NopCloser(bytes.NewReader(origBody))
+	}
+
+	payload := make(map[string]interface{})
+
+	json.NewDecoder(bytes.NewReader(origBody)).Decode(&payload)
+
+	if payload["createKey"] == true {
+		fmt.Println("ERSTELLE NEUEN KEY")
+
+		//create Key and get id
+		keyObject, errx := portainercc.CreateNewKey(transport.dataStore.Key(), "FILE_ENC", fmt.Sprintf("%s_VolKey", payload["Name"]), portainer.TeamAccessPolicies{}, "")
+
+		if errx != nil {
+			return nil, errors.New("cant create key")
+		}
+
+		//set keyid
+		payload["Labels"] = map[string]string{
+			"encrypted":         "true",
+			"pfEncryptionKeyId": fmt.Sprintf("%d", keyObject.ID),
+		}
+
+		//overwrite origbody and calc body lenght
+		b, err := json.Marshal(payload)
+		if err != nil {
+			fmt.Println(err)
+			return nil, errors.New("error creating key")
+		}
+		request.Body = ioutil.NopCloser(bytes.NewReader(b))
+		request.ContentLength = int64(len(b))
 	}
 
 	response, err := transport.executeDockerRequest(request)

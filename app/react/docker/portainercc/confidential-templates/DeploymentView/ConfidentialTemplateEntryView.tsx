@@ -9,6 +9,7 @@ import { ConfidentialTemplate } from '../types';
 import { FormSection } from '@@/form-components/FormSection';
 import { deployTemplate } from '../confidential-templates.service';
 import { useState } from 'react';
+import { UISref, useSrefActive } from '@uirouter/react';
 
 interface Props {
     template: ConfidentialTemplate
@@ -37,6 +38,12 @@ export function ConfidentialTemplateEntryView({ template, envId, encryptedVolume
     let secrets = template.Inputs.filter(input => input.Type == "SECRET");
     let ports = template.Inputs.filter(input => input.Type == "PORT");
     let volumes = template.Inputs.filter(input => input.Type == "VOLUME")
+
+    const volumesLink = useSrefActive(
+        'docker.volumes',
+        { 'environmentId': envId },
+        'active'
+    );
 
     return (
         <>
@@ -146,7 +153,19 @@ export function ConfidentialTemplateEntryView({ template, envId, encryptedVolume
 
                                         </FormSection>}
 
-                                        {volumes.length > 0 && <FormSection title='Encrypted Volumes'>
+                                        {volumes.length > 0 && encVolOptions.length == 0 && <FormSection title='Encrypted Volumes'>
+                                            <span className="small text-muted m-5" ng-if="teams.length === 0">
+                                                You don't seem to have any encrypted volumes set up. Head over to the &nbsp;
+                                                <UISref to="docker.volumes" params={{ environmentId: envId }}>
+                                                    <a>Volumes view</a>
+                                                </UISref>
+                                                &nbsp;
+                                                to create some.
+                                            </span>
+                                            {isValid = false}
+                                        </FormSection>}
+
+                                        {volumes.length > 0 && encVolOptions.length > 0 && <FormSection title='Encrypted Volumes'>
                                             {volumes.map((input) => {
                                                 let str = "Inputs." + input.Label;
                                                 return (
