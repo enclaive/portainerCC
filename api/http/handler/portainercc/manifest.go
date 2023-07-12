@@ -21,3 +21,23 @@ func createUpdateManifest(template portainer.ConfidentialTemplate, inputParam Co
 
 	return manifest
 }
+
+func createUpdateManifestForImage(name string, params portainer.Parameters, mrenclave string, mrsigner string) portainer.CoordinatorManifest {
+	manifest := portainer.CoordinatorManifest{
+		Packages: map[string]portainer.PackageProperties{
+			name: {
+				//mrenclave for now
+				UniqueID: mrenclave,
+			},
+		},
+		Marbles: map[string]portainer.Marble{
+			name + "_marble": {
+				Package:    name,
+				Parameters: params,
+			},
+		},
+		Secrets: nil,
+	}
+
+	return manifest
+}
