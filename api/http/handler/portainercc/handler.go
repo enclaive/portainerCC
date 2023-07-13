@@ -84,6 +84,7 @@ func NewHandler(bouncer *security.RequestBouncer, dataStore dataservices.DataSto
 
 	//build and run img
 	restrictedRouter.Handle("/portainercc/confidential-templates/python", httperror.LoggerHandler(h.runConfidentialPython)).Methods(http.MethodPost)
+	restrictedRouter.Handle("/portainercc/confidential-templates/node", httperror.LoggerHandler(h.runConfidentialNode)).Methods(http.MethodPost)
 
 	return h
 }

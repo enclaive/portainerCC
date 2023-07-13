@@ -10,9 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -35,32 +33,7 @@ import (
 	"github.com/portainer/portainer/api/internal/url"
 )
 
-type ConfImgDeployParams struct {
-	EnvId        int
-	SigningKeyId int
-	Name         string
-	Ports        []PortEntry
-	Repository   string
-	BuildArgs    string
-	RunArgs      string
-}
-
-type PortEntry struct {
-	Type      string
-	Host      string
-	Container string
-}
-
-type ErrorLine struct {
-	Error       string      `json:"error"`
-	ErrorDetail ErrorDetail `json:"errorDetail"`
-}
-
-type ErrorDetail struct {
-	Message string `json:"message"`
-}
-
-func (handler *Handler) runConfidentialPython(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
+func (handler *Handler) runConfidentialNode(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	var params ConfImgDeployParams
 	err := json.NewDecoder(r.Body).Decode(&params)
 
@@ -71,7 +44,7 @@ func (handler *Handler) runConfidentialPython(w http.ResponseWriter, r *http.Req
 	fmt.Println("Body:")
 	fmt.Println(params)
 
-	const BASE_IMG = "marcely0/pcc-py-demo-base"
+	const BASE_IMG = "soelangen/pcc-nodejs-demo "
 
 	// clone repo in tmpdir on host
 	tmpDir, err := ioutil.TempDir("", "")
@@ -148,9 +121,9 @@ func (handler *Handler) runConfidentialPython(w http.ResponseWriter, r *http.Req
 
 	//handle build args
 
-	dfile.WriteString("RUN gramine-manifest -Darch_libdir=/lib/x86_64-linux-gnu py.manifest.template py.manifest \\\n")
-	dfile.WriteString("&& gramine-sgx-sign --key \"/signing.pem\" --manifest py.manifest --output py.manifest.sgx \\\n")
-	dfile.WriteString("&& gramine-sgx-get-token -s ./py.sig -o attributes \\\n")
+	dfile.WriteString("RUN gramine-manifest -Darch_libdir=/lib/x86_64-linux-gnu node.manifest.template node.manifest \\\n")
+	dfile.WriteString("&& gramine-sgx-sign --key \"/signing.pem\" --manifest node.manifest --output node.manifest.sgx \\\n")
+	dfile.WriteString("&& gramine-sgx-get-token -s ./node.sig -o attributes \\\n")
 	dfile.WriteString("&& cat ./attributes \\\n")
 	dfile.WriteString("&& sed -i 's,https://localhost:8081/sgx/certification/v3/,https://172.17.0.1:8081/sgx/certification/v3/,g' /etc/sgx_default_qcnl.conf \\\n")
 	dfile.WriteString("&& sed -i 's,\"use_secure_cert\": true,\"use_secure_cert\": false,g' /etc/sgx_default_qcnl.conf\\\n")
@@ -164,7 +137,7 @@ func (handler *Handler) runConfidentialPython(w http.ResponseWriter, r *http.Req
 		panic(err)
 	}
 
-	imgName := "sgxdcaprastuff/pcc-py-demo:" + params.Name
+	imgName := "sgxdcaprastuff/pcc-node-demo:" + params.Name
 
 	// set build options for image build
 	opts := types.ImageBuildOptions{
@@ -216,7 +189,7 @@ func (handler *Handler) runConfidentialPython(w http.ResponseWriter, r *http.Req
 
 	// var params ConfTempDeployParams
 	marbleparams := &portainer.Parameters{
-		Argv: []string{"/usr/bin/python3", params.RunArgs},
+		Argv: []string{"/usr/bin/node", params.RunArgs},
 	}
 
 	//create updateManifest
@@ -482,26 +455,4 @@ func (handler *Handler) runConfidentialPython(w http.ResponseWriter, r *http.Req
 	}
 
 	return response.JSON(w, createContainer.ID)
-}
-
-func print(rd io.Reader) error {
-	var lastLine string
-
-	scanner := bufio.NewScanner(rd)
-	for scanner.Scan() {
-		lastLine = scanner.Text()
-		log.Info().Str("Docker", "").Msg(scanner.Text())
-	}
-
-	errLine := &ErrorLine{}
-	json.Unmarshal([]byte(lastLine), errLine)
-	if errLine.Error != "" {
-		return errors.New(errLine.Error)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	return nil
 }
