@@ -10,6 +10,7 @@ import {
   Clipboard,
   Edit,
   Codesandbox,
+  Command,
 } from 'react-feather';
 
 import {
@@ -88,6 +89,14 @@ export function DockerSidebar({ environmentId, environment }: Props) {
         params={{ endpointId: environmentId }}
         icon={Codesandbox}
         label="Coordinator"
+        data-cy="dockerSidebar-containers"
+      />
+
+      <SidebarItem
+        to="docker.runyourcode"
+        params={{ endpointId: environmentId }}
+        icon={Command}
+        label="RunYourCode"
         data-cy="dockerSidebar-containers"
       />
 

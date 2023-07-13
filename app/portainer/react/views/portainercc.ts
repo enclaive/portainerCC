@@ -6,6 +6,7 @@ import { ConfidentialImagesListView } from '@/react/portainer/portainercc/confid
 import { CoordinatorImagesListView } from '@/react/portainer/portainercc/coordinator';
 import { CoordinatorDeploymentView } from '@/react/docker/portainercc/coordinator/DeploymentView';
 import { ConfidentialTemplatesView } from '@/react/docker/portainercc/confidential-templates/DeploymentView';
+import { RunYourCodeView } from '@/react/docker/portainercc/runyourcode/RunYourCodeView';
 
 import { r2a } from '@/react-tools/react2angular';
 import { withCurrentUser } from '@/react-tools/withCurrentUser';
@@ -31,6 +32,9 @@ export const portainerCCModule = angular
   ).component(
     'confidentialTemplates',
     r2a(withUIRouter(withReactQuery(withCurrentUser(ConfidentialTemplatesView))), [])
+  ).component(
+    'runyourcode',
+    r2a(withUIRouter(withReactQuery(withCurrentUser(RunYourCodeView))), [])
   ).name;
 
 /* @ngInject */
@@ -81,6 +85,16 @@ function config($stateRegistryProvider: StateRegistry) {
     views: {
       'content@': {
         component: 'confidentialTemplates',
+      },
+    },
+  });
+
+  $stateRegistryProvider.register({
+    name: 'docker.runyourcode',
+    url: '/runyourcode',
+    views: {
+      'content@': {
+        component: 'runyourcode',
       },
     },
   });
